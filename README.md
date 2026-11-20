@@ -82,14 +82,3 @@ Browser (React)  --/api calls-->  FastAPI (Python)  --SQL-->  SQLite file
 | Audit trail (who, when, what) | table `audit_log`, `GET /api/audit-log` |
 | Only Sourcing Manager can change | `backend/app/auth.py` (development stand-in, not real login) |
 | Catalogue available for other groups | `GET /api/catalogue` |
-
-## Known limits (next steps)
-
-- Login is a stand-in (headers). Replace with real authentication later.
-- SQLite is for development. For the cloud, set `DATABASE_URL` to PostgreSQL.
-- No Dockerfile or CI pipeline yet (Sprint 2).
-
-## Rules from the course
-
-- Never commit secrets or `.env` files.
-- Log every AI use in `AI_USAGE.md` and be able to explain every line you hand in.
