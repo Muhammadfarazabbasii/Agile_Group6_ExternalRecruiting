@@ -1,0 +1,1058 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Group 6 External Recruiting API",
+    "description": "Sprint 1: role catalogue (US-01).",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/seniority-levels": {
+      "get": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "List Seniority Levels",
+        "operationId": "list_seniority_levels_api_seniority_levels_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SeniorityOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Seniority Levels Api Seniority Levels Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/role-categories": {
+      "get": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "List Categories",
+        "operationId": "list_categories_api_role_categories_get",
+        "parameters": [
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Active"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryOut"
+                  },
+                  "title": "Response List Categories Api Role Categories Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "Create Category",
+        "operationId": "create_category_api_role_categories_post",
+        "parameters": [
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NameIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/role-categories/{category_id}": {
+      "patch": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "Rename Category",
+        "operationId": "rename_category_api_role_categories__category_id__patch",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NameIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/role-categories/{category_id}/deactivate": {
+      "post": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "Deactivate Category",
+        "description": "Deactivates the category and all its roles (they cannot be used in new requests).",
+        "operationId": "deactivate_category_api_role_categories__category_id__deactivate_post",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/role-categories/{category_id}/activate": {
+      "post": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "Activate Category",
+        "description": "Activates only the category. Its roles stay inactive until activated one by one.",
+        "operationId": "activate_category_api_role_categories__category_id__activate_post",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/roles": {
+      "get": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "List Roles",
+        "operationId": "list_roles_api_roles_get",
+        "parameters": [
+          {
+            "name": "active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Active"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleOut"
+                  },
+                  "title": "Response List Roles Api Roles Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "Create Role",
+        "operationId": "create_role_api_roles_post",
+        "parameters": [
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/roles/{role_id}": {
+      "patch": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "Rename Role",
+        "operationId": "rename_role_api_roles__role_id__patch",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Role Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NameIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/roles/{role_id}/deactivate": {
+      "post": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "Deactivate Role",
+        "operationId": "deactivate_role_api_roles__role_id__deactivate_post",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Role Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/roles/{role_id}/activate": {
+      "post": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "Activate Role",
+        "operationId": "activate_role_api_roles__role_id__activate_post",
+        "parameters": [
+          {
+            "name": "role_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Role Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalogue": {
+      "get": {
+        "tags": [
+          "Role catalogue (US-01)",
+          "Catalogue for other groups"
+        ],
+        "summary": "Get Catalogue",
+        "description": "Active categories with their active roles, plus the seniority levels.\nGroups 1, 3 and 7 use this to get the same roleId and level codes.",
+        "operationId": "get_catalogue_api_catalogue_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogueOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit-log": {
+      "get": {
+        "tags": [
+          "Role catalogue (US-01)"
+        ],
+        "summary": "List Audit Log",
+        "operationId": "list_audit_log_api_audit_log_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditOut"
+                  },
+                  "title": "Response List Audit Log Api Audit Log Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Health",
+        "description": "Health endpoint (course requirement: observability).",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuditOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "actor": {
+            "type": "string",
+            "title": "Actor"
+          },
+          "entity": {
+            "type": "string",
+            "title": "Entity"
+          },
+          "entity_id": {
+            "type": "string",
+            "title": "Entity Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "actor",
+          "entity",
+          "entity_id",
+          "action",
+          "detail"
+        ],
+        "title": "AuditOut"
+      },
+      "CatalogueCategory": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogueRole"
+            },
+            "type": "array",
+            "title": "Roles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "roles"
+        ],
+        "title": "CatalogueCategory"
+      },
+      "CatalogueOut": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogueCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "seniority_levels": {
+            "items": {
+              "$ref": "#/components/schemas/SeniorityOut"
+            },
+            "type": "array",
+            "title": "Seniority Levels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "categories",
+          "seniority_levels"
+        ],
+        "title": "CatalogueOut",
+        "description": "Read-only view for other groups: only active entries."
+      },
+      "CatalogueRole": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "CatalogueRole"
+      },
+      "CategoryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "active"
+        ],
+        "title": "CategoryOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NameIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "NameIn"
+      },
+      "RoleCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "category_id": {
+            "type": "string",
+            "title": "Category Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "category_id"
+        ],
+        "title": "RoleCreate"
+      },
+      "RoleOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "category_id": {
+            "type": "string",
+            "title": "Category Id"
+          },
+          "category_name": {
+            "type": "string",
+            "title": "Category Name"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "category_id",
+          "category_name",
+          "name",
+          "active"
+        ],
+        "title": "RoleOut"
+      },
+      "SeniorityOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "label"
+        ],
+        "title": "SeniorityOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
