@@ -150,16 +150,6 @@ Decisions we made on our own (please confirm in the team):
 - Status mapping at take-over (Group 7 contract status + participation status -> ours):
   withdrawn -> TERMINATED; invited or rates_submitted -> DRAFT; active participation in a draft or rate_collection contract -> DRAFT; active in an active contract -> ACTIVE; active in an ended contract -> ACTIVE if the end date has passed (then shown as EXPIRED), otherwise TERMINATED. Unknown values -> DRAFT, so they never make a supplier selectable.
 - A Group 7 supplier with status inactive is taken over as deactivated. A supplier with the same name but another ID is skipped and reported.
-- There is no automatic sync. The Sourcing Manager chooses what to take over. Later changes at Group 7 are not copied.
 
-## Known limits (next steps)
 
-- Login is a stand-in (headers). Replace with real authentication later.
-- SQLite is for development. For the cloud, set `DATABASE_URL` to PostgreSQL.
-- No Dockerfile or CI pipeline yet (Sprint 2).
-- Today's date is the date of the server. A contract changes its status when the server's date changes (in the cloud this is usually UTC).
 
-## Rules from the course
-
-- Never commit secrets or `.env` files.
-- Log every AI use in `AI_USAGE.md` and be able to explain every line you hand in.
