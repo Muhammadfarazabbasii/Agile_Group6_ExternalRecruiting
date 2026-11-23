@@ -1,8 +1,8 @@
 """Database tables for US-01 (from our ERD): seniority_level, role_category, role, audit_log."""
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -55,6 +55,48 @@ class AuditLog(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     actor: Mapped[str] = mapped_column(String(100))
     entity: Mapped[str] = mapped_column(String(50))
-    entity_id: Mapped[str] = mapped_column(String(36))
+    entity_id: Mapped[str] = mapped_column(String(64))
     action: Mapped[str] = mapped_column(String(30))
     detail: Mapped[str] = mapped_column(Text, default="")
+
+
+class Supplier(Base):
+    """US-02: pre-selected supplier. `id` is the shared supplierId used with Group 7.
+
+    Group 7 uses short text IDs such as `sup-01`, so the ID is text (up to 64 characters), not only a UUID.
+    If we create a supplier ourselves, the ID is a generated UUID.
+    """
+
+    __tablename__ = "supplier"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=new_id)
+    name: Mapped[str] = mapped_column(String(150), unique=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    contracts: Mapped[list["FrameworkContract"]] = relationship(
+        back_populates="supplier", order_by="FrameworkContract.valid_from.desc()"
+    )
+
+
+class FrameworkContract(Base):
+    """US-02: master agreement of a supplier.
+
+    `reference` is the contract ID that we share with Group 7 (for example `fc-2027`). Several suppliers can sign the
+    same framework contract, so the reference is unique per supplier, not for the whole table.
+    `base_status` is what a person set: DRAFT, ACTIVE or TERMINATED.
+    The status shown to users (ACTIVE, SCHEDULED, EXPIRED ...) is calculated from the dates,
+    see contract_rules.py, so expired contracts show as expired without any job.
+    """
+
+    __tablename__ = "framework_contract"
+    __table_args__ = (UniqueConstraint("supplier_id", "reference"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    supplier_id: Mapped[str] = mapped_column(ForeignKey("supplier.id"))
+    reference: Mapped[str] = mapped_column(String(100))
+    title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    valid_from: Mapped[date] = mapped_column(Date)
+    valid_to: Mapped[date] = mapped_column(Date)
+    base_status: Mapped[str] = mapped_column(String(20), default="DRAFT")
+
+    supplier: Mapped[Supplier] = relationship(back_populates="contracts")

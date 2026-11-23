@@ -34,6 +34,7 @@ const post = (path, body) => request(path, { method: "POST", body: body ? JSON.s
 const patch = (path, body) => request(path, { method: "PATCH", body: JSON.stringify(body) });
 
 export const api = {
+  // US-01 role catalogue
   seniorityLevels: () => request("/api/seniority-levels"),
   categories: () => request("/api/role-categories"),
   createCategory: (name) => post("/api/role-categories", { name }),
@@ -45,5 +46,23 @@ export const api = {
   renameRole: (id, name) => patch(`/api/roles/${id}`, { name }),
   deactivateRole: (id) => post(`/api/roles/${id}/deactivate`),
   activateRole: (id) => post(`/api/roles/${id}/activate`),
-  auditLog: () => request("/api/audit-log"),
+
+  // US-02 suppliers and framework contracts
+  suppliers: () => request("/api/suppliers"),
+  createSupplier: (name, supplier_id) => post("/api/suppliers", supplier_id ? { name, supplier_id } : { name }),
+  renameSupplier: (id, name) => patch(`/api/suppliers/${id}`, { name }),
+  deactivateSupplier: (id) => post(`/api/suppliers/${id}/deactivate`),
+  activateSupplier: (id) => post(`/api/suppliers/${id}/activate`),
+  createContract: (body) => post("/api/framework-contracts", body),
+  updateContract: (id, body) => patch(`/api/framework-contracts/${id}`, body),
+  activateContract: (id) => post(`/api/framework-contracts/${id}/activate`),
+  terminateContract: (id) => post(`/api/framework-contracts/${id}/terminate`),
+
+  // US-02 take-over from Group 7 (Expert Supplier)
+  group7Suppliers: () => request("/api/group7/suppliers"),
+  importGroup7Suppliers: (supplier_ids) => post("/api/group7/import-suppliers", { supplier_ids }),
+
+  // shared audit trail, optionally only some entities
+  auditLog: (entities = []) =>
+    request("/api/audit-log" + (entities.length ? "?" + entities.map((e) => `entity=${encodeURIComponent(e)}`).join("&") : "")),
 };

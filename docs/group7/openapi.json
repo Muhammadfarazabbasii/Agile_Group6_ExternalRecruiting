@@ -1,0 +1,1358 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Group 7 – Expert Supplier API",
+    "version": "0.1.0-draft",
+    "description": "Draft API contract of Group 7 (Expert Supplier) for Sprint 1.\n\nGroup 7 simulates the **supplier side** of external expert sourcing:\nsuppliers join a framework contract and set their maximum daily rate per role and\nseniority level, manage their experts, answer sourcing requests from Group 6 with\noffers and run the resulting assignments.\n\nConsumers:\n- **Group 6 (External Recruiting)** – framework contracts, rates, offers, decisions.\n- **Group 5 (People Analytics)** – read access for KPIs via list endpoints with\n  `updatedSince` and the event feed.\n- **Groups 2, 3, 4** – assignment events (onboarding, capacity, learning).\n\nStatus: draft for alignment with Groups 5 and 6. Field names may still change.\nDrafted with AI assistance (Claude), logged in aiusage.md.\n"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api/v1",
+      "description": "Local development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Catalogue"
+    },
+    {
+      "name": "Contracts"
+    },
+    {
+      "name": "Experts"
+    },
+    {
+      "name": "Requests"
+    },
+    {
+      "name": "Offers"
+    },
+    {
+      "name": "Assignments"
+    },
+    {
+      "name": "Events"
+    }
+  ],
+  "paths": {
+    "/role-categories": {
+      "get": {
+        "tags": [
+          "Catalogue"
+        ],
+        "summary": "List role categories (Development, Consulting, Operations, Data, Security)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleCategory"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles": {
+      "get": {
+        "tags": [
+          "Catalogue"
+        ],
+        "summary": "List roles, optionally filtered by category",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Role"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/seniority-levels": {
+      "get": {
+        "tags": [
+          "Catalogue"
+        ],
+        "summary": "List seniority levels",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeniorityLevel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/framework-contracts": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "List framework contracts",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/UpdatedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FrameworkContract"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/framework-contracts/{contractId}": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "Get one framework contract with its roles and participating suppliers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContractId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrameworkContract"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/framework-contracts/{contractId}/participations": {
+      "post": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "A supplier joins a framework contract",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContractId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "supplierId"
+                ],
+                "properties": {
+                  "supplierId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractParticipation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/framework-contracts/{contractId}/max-daily-rates": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "Maximum daily rates of all participating suppliers",
+        "description": "Group 6 (company side) sees the rates of all suppliers to check offers.\nA supplier only sees its own rates (filtered by the caller's supplier id).\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ContractId"
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "roleId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seniority",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SeniorityCode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaxDailyRate"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/participations/{participationId}/max-daily-rates": {
+      "put": {
+        "tags": [
+          "Contracts"
+        ],
+        "summary": "A supplier sets its maximum daily rates for every role and level of the contract",
+        "parameters": [
+          {
+            "name": "participationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "roleId",
+                    "seniority",
+                    "maxRate"
+                  ],
+                  "properties": {
+                    "roleId": {
+                      "type": "string"
+                    },
+                    "seniority": {
+                      "$ref": "#/components/schemas/SeniorityCode"
+                    },
+                    "maxRate": {
+                      "$ref": "#/components/schemas/Money"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rates stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaxDailyRate"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Contract is already active; rates are locked"
+          }
+        }
+      }
+    },
+    "/suppliers": {
+      "get": {
+        "tags": [
+          "Experts"
+        ],
+        "summary": "List simulated suppliers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Supplier"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/experts": {
+      "get": {
+        "tags": [
+          "Experts"
+        ],
+        "summary": "Search experts by role, level and availability",
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "roleId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seniority",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SeniorityCode"
+            }
+          },
+          {
+            "name": "availability",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Availability"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/UpdatedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Expert"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Experts"
+        ],
+        "summary": "Create an expert profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpertInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Expert"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sourcing-requests": {
+      "post": {
+        "tags": [
+          "Requests"
+        ],
+        "summary": "Group 6 publishes a sourcing request to the suppliers of a contract",
+        "description": "Only suppliers participating in the referenced framework contract receive the request.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourcingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted and distributed to participating suppliers"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Requests"
+        ],
+        "summary": "List received sourcing requests (supplier view)",
+        "parameters": [
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/UpdatedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SourcingRequest"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers": {
+      "get": {
+        "tags": [
+          "Offers"
+        ],
+        "summary": "List offers",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "supplierId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/OfferStatus"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/UpdatedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Offer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Offers"
+        ],
+        "summary": "Create an offer draft for a request",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfferInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Draft created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Offer"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Daily rate above the supplier's maximum daily rate, travel surcharge above the cap, or expert not available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers/{offerId}/submit": {
+      "post": {
+        "tags": [
+          "Offers"
+        ],
+        "summary": "Submit an offer to Group 6 (emits OfferSubmitted)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OfferId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Offer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offers/{offerId}/decision": {
+      "post": {
+        "tags": [
+          "Offers"
+        ],
+        "summary": "Group 6 accepts or rejects an offer (accept creates an assignment)",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OfferId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "decision"
+                ],
+                "properties": {
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "accepted",
+                      "rejected"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Decision stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Offer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assignments": {
+      "get": {
+        "tags": [
+          "Assignments"
+        ],
+        "summary": "List assignments",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AssignmentStatus"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/UpdatedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Assignment"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assignments/{assignmentId}": {
+      "patch": {
+        "tags": [
+          "Assignments"
+        ],
+        "summary": "Extend, replace the expert of, or end an assignment",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "extend",
+                      "replace",
+                      "end"
+                    ]
+                  },
+                  "newEndDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "replacementExpertId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Assignment"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Event feed for polling consumers (e.g. Group 5)",
+        "description": "Ordered by `occurredAt`. Without `since`, returns the full history as an initial snapshot.",
+        "parameters": [
+          {
+            "name": "since",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/EventType"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 500,
+              "maximum": 5000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Subscribe to events by webhook (push delivery)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "callbackUrl",
+                  "eventTypes"
+                ],
+                "properties": {
+                  "callbackUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "eventTypes": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/EventType"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Subscription created"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "ContractId": {
+        "name": "contractId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "OfferId": {
+        "name": "offerId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "UpdatedSince": {
+        "name": "updatedSince",
+        "in": "query",
+        "description": "Only records changed after this time (incremental sync). Omit for a full snapshot.",
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Money": {
+        "type": "object",
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "example": 850
+          },
+          "currency": {
+            "type": "string",
+            "example": "EUR"
+          }
+        }
+      },
+      "SeniorityCode": {
+        "type": "string",
+        "enum": [
+          "JUNIOR",
+          "SENIOR",
+          "EXPERT"
+        ]
+      },
+      "Availability": {
+        "type": "string",
+        "enum": [
+          "available",
+          "proposed",
+          "assigned"
+        ]
+      },
+      "OfferStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "submitted",
+          "accepted",
+          "rejected",
+          "withdrawn"
+        ]
+      },
+      "AssignmentStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "extended",
+          "replaced",
+          "ended"
+        ]
+      },
+      "RoleCategory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cat-dev"
+          },
+          "name": {
+            "type": "string",
+            "example": "Development"
+          }
+        }
+      },
+      "Role": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "role-backend"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "cat-dev"
+          },
+          "name": {
+            "type": "string",
+            "example": "Backend Developer"
+          }
+        }
+      },
+      "SeniorityLevel": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/SeniorityCode"
+          },
+          "label": {
+            "type": "string",
+            "example": "Senior"
+          }
+        }
+      },
+      "Supplier": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "sup-01"
+          },
+          "name": {
+            "type": "string",
+            "example": "Nordlicht IT Consulting"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          }
+        }
+      },
+      "FrameworkContract": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "fc-2027"
+          },
+          "title": {
+            "type": "string",
+            "example": "IT Expert Services 2027"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "rate_collection",
+              "active",
+              "ended"
+            ]
+          },
+          "travelSurchargeCap": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "roleIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "participations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContractParticipation"
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ContractParticipation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "part-01"
+          },
+          "contractId": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "string"
+          },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "invited",
+              "rates_submitted",
+              "active",
+              "withdrawn"
+            ]
+          }
+        }
+      },
+      "MaxDailyRate": {
+        "type": "object",
+        "properties": {
+          "participationId": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": "string"
+          },
+          "seniority": {
+            "$ref": "#/components/schemas/SeniorityCode"
+          },
+          "maxRate": {
+            "$ref": "#/components/schemas/Money"
+          }
+        }
+      },
+      "ExpertInput": {
+        "type": "object",
+        "required": [
+          "supplierId",
+          "displayName",
+          "roleId",
+          "seniority"
+        ],
+        "properties": {
+          "supplierId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": "string"
+          },
+          "seniority": {
+            "$ref": "#/components/schemas/SeniorityCode"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "availableFrom": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "Expert": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ExpertInput"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "exp-017"
+              },
+              "pseudonymId": {
+                "type": "string",
+                "description": "Stable pseudonymised id for analytics (no name)",
+                "example": "ext-7f3a9c"
+              },
+              "availability": {
+                "$ref": "#/components/schemas/Availability"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "SourcingRequest": {
+        "type": "object",
+        "description": "Owned by Group 6; Group 7 stores a copy for each receiving supplier.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "req-104"
+          },
+          "contractId": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": "string"
+          },
+          "seniority": {
+            "$ref": "#/components/schemas/SeniorityCode"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "onsite": {
+            "type": "boolean"
+          },
+          "departmentId": {
+            "type": "string",
+            "description": "Requesting department (common id with Groups 5 and 6)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ]
+          }
+        }
+      },
+      "OfferInput": {
+        "type": "object",
+        "required": [
+          "requestId",
+          "expertId",
+          "dailyRate"
+        ],
+        "properties": {
+          "requestId": {
+            "type": "string"
+          },
+          "expertId": {
+            "type": "string"
+          },
+          "dailyRate": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "travelSurcharge": {
+            "$ref": "#/components/schemas/Money"
+          }
+        }
+      },
+      "Offer": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OfferInput"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "off-311"
+              },
+              "supplierId": {
+                "type": "string"
+              },
+              "contractId": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/components/schemas/OfferStatus"
+              },
+              "submittedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "decidedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "Assignment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "asg-052"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "expertPseudonymId": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "string"
+          },
+          "roleId": {
+            "type": "string"
+          },
+          "seniority": {
+            "$ref": "#/components/schemas/SeniorityCode"
+          },
+          "departmentId": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "dailyRate": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AssignmentStatus"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EventType": {
+        "type": "string",
+        "enum": [
+          "SupplierJoinedContract",
+          "MaxDailyRatesSubmitted",
+          "SourcingRequestReceived",
+          "OfferSubmitted",
+          "OfferAccepted",
+          "OfferRejected",
+          "ExpertAssigned",
+          "AssignmentExtended",
+          "ExpertReplaced",
+          "AssignmentEnded"
+        ]
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/EventType"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "example": "group7-expert-supplier"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "RATE_ABOVE_MAXIMUM"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

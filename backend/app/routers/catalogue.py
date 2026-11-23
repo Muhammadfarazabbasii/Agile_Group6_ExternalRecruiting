@@ -1,8 +1,9 @@
 """US-01: Maintain Role Catalogue (role categories, roles, seniority levels)."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from ..audit import log
 from ..auth import User, require_sourcing_manager
 from ..database import get_db
 from ..models import AuditLog, Role, RoleCategory, SeniorityLevel
@@ -20,10 +21,6 @@ router = APIRouter(prefix="/api", tags=["Role catalogue (US-01)"])
 
 
 # ---------- helpers ----------
-
-def log(db: Session, user: User, entity: str, entity_id: str, action: str, detail: str = "") -> None:
-    db.add(AuditLog(actor=user.name, entity=entity, entity_id=entity_id, action=action, detail=detail))
-
 
 def get_category_or_404(db: Session, category_id: str) -> RoleCategory:
     category = db.get(RoleCategory, category_id)
@@ -229,6 +226,14 @@ def get_catalogue(db: Session = Depends(get_db)):
 # ---------- audit trail ----------
 
 @router.get("/audit-log", response_model=list[AuditOut])
-def list_audit_log(limit: int = 50, _: User = Depends(require_sourcing_manager), db: Session = Depends(get_db)):
+def list_audit_log(
+    limit: int = 50,
+    entity: list[str] | None = Query(default=None, description="Only these entities, e.g. role, supplier"),
+    _: User = Depends(require_sourcing_manager),
+    db: Session = Depends(get_db),
+):
     limit = max(1, min(limit, 500))
-    return db.scalars(select(AuditLog).order_by(AuditLog.id.desc()).limit(limit)).all()
+    q = select(AuditLog).order_by(AuditLog.id.desc()).limit(limit)
+    if entity:
+        q = q.where(AuditLog.entity.in_(entity))
+    return db.scalars(q).all()
