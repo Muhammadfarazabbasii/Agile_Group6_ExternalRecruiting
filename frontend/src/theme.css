@@ -1,0 +1,141 @@
+/* Group 6 External Recruiting: calm, precise interface theme.
+   Drop-in file: save as frontend/src/theme.css and add `import "./theme.css";`
+   AFTER the styles.css import in frontend/src/main.jsx.
+   It targets plain HTML elements under #root, so it works without knowing the class names.
+   System fonts only (no Google Fonts: avoids the GDPR problem with hotlinked fonts in Germany). */
+
+:root {
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --ink: #17212b;
+  --muted: #5b6876;
+  --line: #dfe4ea;
+  --line-strong: #c8d0d9;
+  --brand: #14566b;
+  --brand-hover: #0f4455;
+  --brand-soft: #e3f0f3;
+  --ok: #1d7a4e;      --ok-soft: #e4f4ec;
+  --warn: #8f5b00;    --warn-soft: #fcf1d9;
+  --bad: #b3261e;     --bad-soft: #fbe9e7;
+  --neutral-soft: #eceff3;
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Layout */
+#root { min-height: 100vh; }
+#root > * { box-sizing: border-box; }
+#root main { max-width: 1120px; margin: 0 auto; padding: 28px 24px 64px; }
+
+/* Header and navigation */
+#root header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 24px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px;
+}
+#root header h1 { margin: 0; font-size: 1.15rem; font-weight: 650; letter-spacing: -0.01em; }
+#root nav { display: flex; gap: 4px; flex-wrap: wrap; background: var(--surface); border-bottom: 1px solid var(--line); padding: 0 24px; }
+#root header nav { border: 0; padding: 0; }
+#root nav :is(button, a) {
+  background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+  padding: 12px 14px; margin: 0 0 -1px; color: var(--muted); font-weight: 550; cursor: pointer; text-decoration: none;
+}
+#root nav :is(button, a):hover { color: var(--ink); background: none; }
+#root nav :is(.active, [aria-selected="true"], [aria-current]) { color: var(--brand); border-bottom-color: var(--brand); }
+
+/* Type */
+#root h1, #root h2, #root h3 { color: var(--ink); line-height: 1.25; letter-spacing: -0.01em; }
+#root h2 { font-size: 1.3rem; font-weight: 650; margin: 0 0 14px; }
+#root h3 { font-size: 1.05rem; font-weight: 620; margin: 22px 0 10px; }
+#root p { max-width: 70ch; }
+#root small, #root .muted, #root .hint { color: var(--muted); }
+#root code { font-family: var(--mono); font-size: 0.9em; background: var(--neutral-soft); padding: 1px 5px; border-radius: 4px; }
+#root a { color: var(--brand); }
+
+/* Panels */
+#root :is(section, article, .card, .panel) {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 20px 22px;
+  margin: 0 0 20px;
+  box-shadow: 0 1px 2px rgba(23, 33, 43, 0.04);
+}
+#root :is(section, article, .card, .panel) :is(section, article, .card, .panel) { box-shadow: none; background: #fafbfc; }
+
+/* Form controls */
+#root :is(input, select, textarea) {
+  font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-s);
+  padding: 8px 10px; min-height: 38px; box-sizing: border-box;
+}
+#root :is(input, select, textarea):hover { border-color: #aab4c0; }
+#root :is(input, select, textarea):disabled { background: var(--neutral-soft); color: var(--muted); }
+#root label { font-weight: 550; font-size: 0.9rem; color: var(--ink); }
+
+/* Buttons: neutral by default, filled for primary actions */
+#root button {
+  font: inherit; font-weight: 550; cursor: pointer;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-s);
+  padding: 7px 14px; min-height: 36px;
+  transition: background-color .12s, border-color .12s;
+}
+#root button:hover:not(:disabled) { background: var(--neutral-soft); border-color: #aab4c0; }
+#root button:disabled { opacity: .5; cursor: not-allowed; }
+#root :is(button.primary, button[type="submit"], .btn-primary) { background: var(--brand); border-color: var(--brand); color: #fff; }
+#root :is(button.primary, button[type="submit"], .btn-primary):hover:not(:disabled) { background: var(--brand-hover); border-color: var(--brand-hover); }
+#root :is(button.danger, .btn-danger) { color: var(--bad); border-color: #e6b8b4; }
+#root :is(button.danger, .btn-danger):hover:not(:disabled) { background: var(--bad-soft); border-color: var(--bad); }
+
+/* Tables */
+#root table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+#root :is(th, td) { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+#root th { font-weight: 600; color: var(--muted); font-size: 0.85rem; background: #f8fafb; border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+#root tbody tr:hover { background: #f8fafb; }
+#root tbody tr:last-child td { border-bottom: 0; }
+
+/* Status badges (best effort on common class names) */
+#root :is(.badge, .pill, .status, .tag) {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 0.8rem; font-weight: 600; background: var(--neutral-soft); color: var(--muted);
+}
+#root :is(.badge, .pill, .status, .tag):is([class*="active" i], [class*="ok" i], [class*="yes" i], [class*="imported" i], [class*="created" i]) { background: var(--ok-soft); color: var(--ok); }
+#root :is(.badge, .pill, .status, .tag):is([class*="draft" i], [class*="scheduled" i], [class*="skipped" i], [class*="existing" i]) { background: var(--warn-soft); color: var(--warn); }
+#root :is(.badge, .pill, .status, .tag):is([class*="expired" i], [class*="terminated" i], [class*="inactive" i], [class*="not_found" i], [class*="no" i]) { background: var(--bad-soft); color: var(--bad); }
+
+/* Messages */
+#root :is(.error, .alert-error, [role="alert"]) {
+  background: var(--bad-soft); color: var(--bad); border: 1px solid #efc3be;
+  border-radius: var(--radius-s); padding: 10px 14px;
+}
+#root :is(.success, .alert-success, [role="status"]) {
+  background: var(--ok-soft); color: var(--ok); border: 1px solid #bfe0cf;
+  border-radius: var(--radius-s); padding: 10px 14px;
+}
+
+/* Accessibility */
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* Small screens: let wide tables scroll instead of breaking the page */
+@media (max-width: 720px) {
+  #root main { padding: 18px 14px 48px; }
+  #root header, #root nav { padding-left: 14px; padding-right: 14px; }
+  #root :is(section, article, .card, .panel) { padding: 16px; }
+  #root table { display: block; overflow-x: auto; white-space: nowrap; }
+}
