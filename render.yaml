@@ -1,0 +1,40 @@
+# Render Blueprint for Group 6 External Recruiting (Render + Neon)
+# Put this file in the ROOT of the repository (next to backend/ and frontend/).
+# The database lives at Neon, not at Render, so there is no `databases:` block here.
+
+services:
+  # Backend: FastAPI
+  - type: web
+    name: group6-backend
+    runtime: python
+    plan: free              # sleeps after 15 min without requests, first request then takes about a minute
+    region: frankfurt       # close to Germany; Neon project should be in AWS Europe (Frankfurt)
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health   # must NOT touch the database (it would keep Neon awake all day)
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: DATABASE_URL
+        sync: false            # paste the Neon connection string in the Render dashboard
+      - key: GROUP7_BASE_URL
+        sync: false            # Group 7's cloud URL ending in /api/v1 (can stay empty at first)
+
+  # Frontend: React + Vite, static site
+  - type: web
+    name: group6-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      # The browser calls /api/... on the frontend URL, Render forwards it to the backend.
+      # If Render gave the backend another name (for example group6-backend-x1y2),
+      # change this destination to the real backend URL.
+      - type: rewrite
+        source: /api/*
+        destination: https://group6-backend.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
