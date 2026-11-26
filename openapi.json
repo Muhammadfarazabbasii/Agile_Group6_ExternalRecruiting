@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Group 6 External Recruiting API",
-    "description": "Sprint 1: role catalogue (US-01), suppliers and framework contracts incl. take-over from Group 7 (US-02).",
+    "description": "Sprint 1: role catalogue (US-01), suppliers and framework contracts incl. take-over from Group 7 (US-02), contract versions with rates and comparison (US-03).",
     "version": "0.1.0"
   },
   "paths": {
@@ -1623,6 +1623,373 @@
         }
       }
     },
+    "/api/framework-contracts/{contract_id}/versions": {
+      "get": {
+        "tags": [
+          "Contract versions and negotiation (US-03)"
+        ],
+        "summary": "List Versions",
+        "description": "All versions of a framework contract, oldest first. Old versions stay readable.",
+        "operationId": "list_versions_api_framework_contracts__contract_id__versions_get",
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Contract Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VersionOut"
+                  },
+                  "title": "Response List Versions Api Framework Contracts  Contract Id  Versions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Contract versions and negotiation (US-03)"
+        ],
+        "summary": "Create Version",
+        "description": "Starts a new negotiation round. copy_previous=true copies the rates and travel cap of the latest version.",
+        "operationId": "create_version_api_framework_contracts__contract_id__versions_post",
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Contract Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contract-versions/{version_id}": {
+      "get": {
+        "tags": [
+          "Contract versions and negotiation (US-03)"
+        ],
+        "summary": "Get Version",
+        "operationId": "get_version_api_contract_versions__version_id__get",
+        "parameters": [
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/framework-contracts/{contract_id}/versions/compare": {
+      "get": {
+        "tags": [
+          "Contract versions and negotiation (US-03)"
+        ],
+        "summary": "Compare Versions",
+        "description": "Rate by rate comparison of two versions (by version number), e.g. version 1 against version 2.",
+        "operationId": "compare_versions_api_framework_contracts__contract_id__versions_compare_get",
+        "parameters": [
+          {
+            "name": "contract_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Contract Id"
+            }
+          },
+          {
+            "name": "from_version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "From Version"
+            }
+          },
+          {
+            "name": "to_version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "To Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contract-versions/{version_id}/rates": {
+      "put": {
+        "tags": [
+          "Contract versions and negotiation (US-03)"
+        ],
+        "summary": "Save Rates",
+        "description": "Replaces the rates and travel cap of a version. Only while it is DRAFT or IN_NEGOTIATION.",
+        "operationId": "save_rates_api_contract_versions__version_id__rates_put",
+        "parameters": [
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatesIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contract-versions/{version_id}/status": {
+      "post": {
+        "tags": [
+          "Contract versions and negotiation (US-03)"
+        ],
+        "summary": "Change Status",
+        "description": "Moves a version to IN_NEGOTIATION or ACTIVE (rules in version_rules.py).\nActivating a version sets the previous ACTIVE version of the same framework contract to SUPERSEDED.",
+        "operationId": "change_status_api_contract_versions__version_id__status_post",
+        "parameters": [
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -1781,6 +2148,126 @@
           "active"
         ],
         "title": "CategoryOut"
+      },
+      "CompareOut": {
+        "properties": {
+          "from_version": {
+            "type": "integer",
+            "title": "From Version"
+          },
+          "to_version": {
+            "type": "integer",
+            "title": "To Version"
+          },
+          "travel_surcharge_cap_from": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel Surcharge Cap From"
+          },
+          "travel_surcharge_cap_to": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel Surcharge Cap To"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/CompareRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "from_version",
+          "to_version",
+          "travel_surcharge_cap_from",
+          "travel_surcharge_cap_to",
+          "rows"
+        ],
+        "title": "CompareOut"
+      },
+      "CompareRow": {
+        "properties": {
+          "role_id": {
+            "type": "string",
+            "title": "Role Id"
+          },
+          "role_name": {
+            "type": "string",
+            "title": "Role Name"
+          },
+          "seniority": {
+            "type": "string",
+            "title": "Seniority"
+          },
+          "from_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Rate"
+          },
+          "to_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Rate"
+          },
+          "change": {
+            "type": "string",
+            "enum": [
+              "added",
+              "removed",
+              "changed",
+              "unchanged"
+            ],
+            "title": "Change"
+          },
+          "delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role_id",
+          "role_name",
+          "seniority",
+          "from_rate",
+          "to_rate",
+          "change",
+          "delta"
+        ],
+        "title": "CompareRow"
       },
       "ContractCreate": {
         "properties": {
@@ -2210,6 +2697,99 @@
         ],
         "title": "NameIn"
       },
+      "RateIn": {
+        "properties": {
+          "role_id": {
+            "type": "string",
+            "title": "Role Id"
+          },
+          "seniority": {
+            "type": "string",
+            "enum": [
+              "JUNIOR",
+              "SENIOR",
+              "EXPERT"
+            ],
+            "title": "Seniority"
+          },
+          "max_daily_rate": {
+            "type": "number",
+            "maximum": 100000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Max Daily Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role_id",
+          "seniority",
+          "max_daily_rate"
+        ],
+        "title": "RateIn"
+      },
+      "RateOut": {
+        "properties": {
+          "role_id": {
+            "type": "string",
+            "title": "Role Id"
+          },
+          "role_name": {
+            "type": "string",
+            "title": "Role Name"
+          },
+          "seniority": {
+            "type": "string",
+            "title": "Seniority"
+          },
+          "max_daily_rate": {
+            "type": "number",
+            "title": "Max Daily Rate"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role_id",
+          "role_name",
+          "seniority",
+          "max_daily_rate",
+          "currency"
+        ],
+        "title": "RateOut"
+      },
+      "RatesIn": {
+        "properties": {
+          "travel_surcharge_cap": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel Surcharge Cap"
+          },
+          "rates": {
+            "items": {
+              "$ref": "#/components/schemas/RateIn"
+            },
+            "type": "array",
+            "title": "Rates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rates"
+        ],
+        "title": "RatesIn",
+        "description": "Replaces all rates of a version. A role and level can appear only once."
+      },
       "RoleCreate": {
         "properties": {
           "name": {
@@ -2278,6 +2858,23 @@
           "label"
         ],
         "title": "SeniorityOut"
+      },
+      "StatusIn": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "IN_NEGOTIATION",
+              "ACTIVE"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "StatusIn"
       },
       "SupplierCreate": {
         "properties": {
@@ -2402,6 +2999,104 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VersionCreate": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "IN_NEGOTIATION"
+            ],
+            "title": "Status",
+            "default": "DRAFT"
+          },
+          "version_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Date"
+          },
+          "copy_previous": {
+            "type": "boolean",
+            "title": "Copy Previous",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "VersionCreate",
+        "description": "A new negotiation round. copy_previous=true starts from the rates and travel cap of the latest version."
+      },
+      "VersionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "framework_contract_id": {
+            "type": "string",
+            "title": "Framework Contract Id"
+          },
+          "version_number": {
+            "type": "integer",
+            "title": "Version Number"
+          },
+          "version_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Version Date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "IN_NEGOTIATION",
+              "ACTIVE",
+              "SUPERSEDED"
+            ],
+            "title": "Status"
+          },
+          "travel_surcharge_cap": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel Surcharge Cap"
+          },
+          "editable": {
+            "type": "boolean",
+            "title": "Editable"
+          },
+          "rates": {
+            "items": {
+              "$ref": "#/components/schemas/RateOut"
+            },
+            "type": "array",
+            "title": "Rates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "framework_contract_id",
+          "version_number",
+          "version_date",
+          "status",
+          "travel_surcharge_cap",
+          "editable",
+          "rates"
+        ],
+        "title": "VersionOut"
       }
     }
   }

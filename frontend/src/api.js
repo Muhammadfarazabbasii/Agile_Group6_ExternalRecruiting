@@ -62,6 +62,15 @@ export const api = {
   group7Suppliers: () => request("/api/group7/suppliers"),
   importGroup7Suppliers: (supplier_ids) => post("/api/group7/import-suppliers", { supplier_ids }),
 
+  // US-03 contract versions (negotiation rounds) and their rates
+  catalogue: () => request("/api/catalogue"),
+  versions: (contractId) => request(`/api/framework-contracts/${contractId}/versions`),
+  createVersion: (contractId, body) => post(`/api/framework-contracts/${contractId}/versions`, body),
+  saveRates: (versionId, body) => request(`/api/contract-versions/${versionId}/rates`, { method: "PUT", body: JSON.stringify(body) }),
+  changeVersionStatus: (versionId, status) => post(`/api/contract-versions/${versionId}/status`, { status }),
+  compareVersions: (contractId, fromVersion, toVersion) =>
+    request(`/api/framework-contracts/${contractId}/versions/compare?from_version=${fromVersion}&to_version=${toVersion}`),
+
   // shared audit trail, optionally only some entities
   auditLog: (entities = []) =>
     request("/api/audit-log" + (entities.length ? "?" + entities.map((e) => `entity=${encodeURIComponent(e)}`).join("&") : "")),

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
+import ContractVersions from "../components/ContractVersions.jsx";
 
 // US-02 page: supplier list, supplier detail with framework contracts, audit trail.
+// US-03: each framework contract has its versions (negotiation rounds) and their rates, see components/ContractVersions.jsx.
 // The logged-in user (userKey, canEdit) comes from App.jsx.
 
 const STATUS_HELP = {
@@ -28,7 +30,7 @@ export default function Suppliers({ userKey, canEdit }) {
     try {
       const [list, auditRows] = await Promise.all([
         api.suppliers(),
-        canEdit ? api.auditLog(["supplier", "framework_contract"]) : Promise.resolve([]),
+        canEdit ? api.auditLog(["supplier", "framework_contract", "contract_version"]) : Promise.resolve([]),
       ]);
       if (id !== latest.current) return;
       setSuppliers(list);
@@ -143,7 +145,7 @@ export default function Suppliers({ userKey, canEdit }) {
       {canEdit && (
         <section className="card">
           <h2>Audit trail</h2>
-          <p className="muted">Latest 50 changes to suppliers and contracts: who, when, what.</p>
+          <p className="muted">Latest 50 changes to suppliers, contracts and versions: who, when, what.</p>
           <div className="scroll">
             <table>
               <thead>
@@ -191,11 +193,13 @@ function SupplierDetail({ supplier, canEdit, run }) {
   const [name, setName] = useState(supplier.name);
   const [editingId, setEditingId] = useState(null);
   const [copied, setCopied] = useState("");
+  const [versionsOfId, setVersionsOfId] = useState(null);
 
   // Show the newest name when another supplier is opened or the data reloads.
   useEffect(() => {
     setName(supplier.name);
     setEditingId(null);
+    setVersionsOfId(null);
   }, [supplier.id, supplier.name]);
 
   function copyId() {
@@ -244,7 +248,7 @@ function SupplierDetail({ supplier, canEdit, run }) {
               <th>Valid from</th>
               <th>Valid to</th>
               <th>Status</th>
-              {canEdit && <th></th>}
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -278,23 +282,24 @@ function SupplierDetail({ supplier, canEdit, run }) {
                   <td>
                     <StatusPill status={c.status} />
                   </td>
-                  {canEdit && (
-                    <td className="actions">
-                      {c.status !== "TERMINATED" && <button onClick={() => setEditingId(c.id)}>Edit</button>}
-                      {c.status === "DRAFT" && <button onClick={() => run(() => api.activateContract(c.id))}>Activate</button>}
-                      {c.status !== "TERMINATED" && (
-                        <button
-                          className="danger"
-                          onClick={() => {
-                            if (window.confirm(`Terminate contract ${c.reference}? This cannot be undone.`))
-                              run(() => api.terminateContract(c.id));
-                          }}
-                        >
-                          Terminate
-                        </button>
-                      )}
-                    </td>
-                  )}
+                  <td className="actions">
+                    <button onClick={() => setVersionsOfId(versionsOfId === c.id ? null : c.id)}>
+                      {versionsOfId === c.id ? "Hide versions" : "Versions"}
+                    </button>
+                    {canEdit && c.status !== "TERMINATED" && <button onClick={() => setEditingId(c.id)}>Edit</button>}
+                    {canEdit && c.status === "DRAFT" && <button onClick={() => run(() => api.activateContract(c.id))}>Activate</button>}
+                    {canEdit && c.status !== "TERMINATED" && (
+                      <button
+                        className="danger"
+                        onClick={() => {
+                          if (window.confirm(`Terminate contract ${c.reference}? This cannot be undone.`))
+                            run(() => api.terminateContract(c.id));
+                        }}
+                      >
+                        Terminate
+                      </button>
+                    )}
+                  </td>
                 </tr>
               )
             )}
@@ -304,6 +309,15 @@ function SupplierDetail({ supplier, canEdit, run }) {
       <p className="muted legend">
         {Object.entries(STATUS_HELP).map(([k, v]) => `${k}: ${v}`).join(" · ")}
       </p>
+
+      {versionsOfId && supplier.contracts.some((c) => c.id === versionsOfId) && (
+        <ContractVersions
+          key={versionsOfId}
+          contract={supplier.contracts.find((c) => c.id === versionsOfId)}
+          canEdit={canEdit}
+          run={run}
+        />
+      )}
 
       {canEdit && (
         <>

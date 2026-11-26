@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import Base, engine
-from .routers import catalogue, group7, suppliers
+from .routers import catalogue, group7, suppliers, versions
 from .seed import seed
 
 
@@ -19,7 +19,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Group 6 External Recruiting API",
     version="0.1.0",
-    description="Sprint 1: role catalogue (US-01), suppliers and framework contracts incl. take-over from Group 7 (US-02).",
+    description=(
+        "Sprint 1: role catalogue (US-01), suppliers and framework contracts incl. take-over from Group 7 (US-02), "
+        "contract versions with rates and comparison (US-03)."
+    ),
     lifespan=lifespan,
 )
 
@@ -33,6 +36,7 @@ app.add_middleware(
 app.include_router(catalogue.router)
 app.include_router(suppliers.router)
 app.include_router(group7.router)
+app.include_router(versions.router)
 
 
 @app.get("/health", tags=["Operations"])

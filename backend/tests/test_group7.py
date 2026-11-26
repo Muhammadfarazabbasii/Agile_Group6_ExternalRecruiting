@@ -6,7 +6,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from app.group7_client import Group7Client, Group7Error, get_group7_client, map_contract_status
+from app.group7_client import Group7Client, Group7Error, build_overview, get_group7_client, map_contract_status
 from app.main import app
 from tests.conftest import HIRING_MANAGER, SOURCING_MANAGER
 
@@ -98,6 +98,30 @@ def test_all_group7_status_values_are_known_to_us():
     for field in ("id", "title", "startDate", "endDate", "status", "participations"):
         assert field in schemas["FrameworkContract"]["properties"]
     assert "supplierId" in schemas["ContractParticipation"]["properties"]
+
+
+def test_participations_are_read_from_the_list_only():
+    """Group 7 always includes participations in GET /framework-contracts (agreed), so no detail call is made.
+    The same contract id is matched per (contract id, supplier id) pair: one row per participating supplier."""
+    suppliers, contracts = group7_data()
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.url.path)
+        if request.url.path.endswith("/suppliers"):
+            return httpx.Response(200, json=suppliers)
+        if request.url.path.endswith("/framework-contracts"):
+            return httpx.Response(200, json=contracts)
+        return httpx.Response(500, json={"detail": "detail call not expected"})
+
+    g7 = Group7Client(base_url="http://group7.test/api/v1", transport=httpx.MockTransport(handler))
+    overview = build_overview(g7.list_suppliers(), g7.list_framework_contracts(), TODAY)
+
+    assert not any("/framework-contracts/fc-2027" in path for path in seen)
+    by_id = {entry["supplier_id"]: entry for entry in overview}
+    assert [(c["reference"], c["mapped_status"]) for c in by_id["sup-01"]["contracts"]] == [("fc-2027", "ACTIVE")]
+    assert [(c["reference"], c["mapped_status"]) for c in by_id["sup-02"]["contracts"]] == [("fc-2027", "DRAFT")]
+    assert by_id["sup-04"]["contracts"] == []
 
 
 # ---------- preview ----------

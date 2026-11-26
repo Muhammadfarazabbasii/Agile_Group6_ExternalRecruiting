@@ -3,7 +3,7 @@
 Course rules (WS 2026/27): every AI use is disclosed, we can explain every line we hand in, no personal data or credentials in prompts, AI output is reviewed and tested.
 AI must not decide team matters (priorities, estimates, acceptance) and must not write our report reflection.
 
-Tool for all entries below: Claude Sonnet 5.5 (model id `claude-sonnet-5-5`), used through the Claude app.
+Tool for entries 1 to 22: Claude Sonnet 5.5 (model id `claude-sonnet-5-5`), used through the Claude app. The header said this for every entry, but **entries 23 to 27 were made with Claude Haiku 5.5** (model id `claude-haiku-5-5`), also through the Claude app. The team must check which model was used for entries 1 to 22 and correct those rows after review. Entries 1 to 22 have not been changed.
 
 How to read the columns:
 - **Result** is filled in by the team after review: Adopted, Adopted with changes, or Rejected. "Pending review" means nobody has decided yet.
@@ -35,16 +35,21 @@ How to read the columns:
 | 20 | 23.11.2026 | Take-over from Group 7: client (`group7_client.py`), status mapping, endpoints `/api/group7/suppliers` and `/api/group7/import-suppliers`, 29 tests with a fake Group 7 incl. a contract test against their schema (`docs/group7/openapi.json`) | Same request | Pending review | 74 tests pass. Not tested against the real Group 7 server, only a fake one. The status mapping (withdrawn, invited, ended) is our assumption and must be confirmed with Group 7 |
 | 21 | 23.11.2026 | Frontend: panel "Take over suppliers from Group 7", contract title field, ID hint | Same request | Pending review | Build passes. Assistant ran a Chromium test against a small fake Group 7 server (preview, take over 2 suppliers, result list, audit trail, contract title) and looked at the screenshot. No JavaScript errors. Team must test by hand with Group 7's real server |
 | 22 | 23.11.2026 | Update README, API.md, regenerate `openapi.json` (28 operations), remove `format: uuid` from supplier IDs in `openapi-draft-us06-us07.yaml` | Asked for OpenAPI JSON, AI usage, API and README files | Pending review | Both OpenAPI files validated with `openapi-spec-validator`. Statements checked against code and tests by the assistant |
+| 23 | 26.11.2026 | Amend the Group 6 take-over from Group 7: status mapping, one contract row per supplier, participations from the list, camelCase for outgoing data, configurable base URL | Pasted Group 7's answers to our questions and asked to amend the project accordingly | Pending review | Removed the extra detail call per contract. 30 Group 7 tests pass (run by the assistant). Group 7 confirmed the status mapping in their reply. Team must check the decisions in README against Group 7's real server |
+| 24 | 26.11.2026 | Backend for US-03: contract version and rate tables, create version with copy option, status rules, one ACTIVE version per contract, blocked edits, comparison endpoint | Asked for the backend of US-03 with the seven steps and acceptance criteria from the story | Pending review | Status rules are pure functions in `version_rules.py`. Live API flow checked by the assistant: copy, supersede, 409 on an edit to a superseded version, 403 for Hiring Manager, comparison rows and travel cap. Team must read and explain every file and decide the open points listed in README |
+| 25 | 26.11.2026 | Tests for US-03: transitions, one ACTIVE version (also refused by the database), blocked edits, copy, comparison, role permissions, audit trail | Same request as entry 24 | Pending review | 124 tests pass in total (run by the assistant). The tests were written by the assistant, so the team must check that they test the story and not only the code |
+| 26 | 26.11.2026 | Frontend for US-03: version panel, rate editor, start negotiation and activate with confirmation, copy option, compare table | Same request as entry 24 | Pending review | Build passes. Headless Chrome check with 11 checks (create version, edit rates, duplicate role and level refused, activate, supersede, compare, read-only for Hiring Manager). Screenshots saved, not yet reviewed by the team. Some check-script selectors were wrong and were fixed; the app behaviour was confirmed from the server log and the database. Team must test by hand |
+| 27 | 26.11.2026 | Regenerate `openapi.json` (34 operations), update API.md and README for US-03 and the Group 7 agreements | Asked for the updated OpenAPI JSON, API file, README and AI usage log | Pending review | `openapi.json` validated with `openapi-spec-validator` (OpenAPI 3.1, 27 paths). Statements in README and API.md checked against code and tests by the assistant |
 
 ## AI-assisted files in the repository
 
-Mark these in commits with the trailer `AI-Assisted: Claude Sonnet 5.5, <purpose>`, as the course asks.
+Mark these in commits with the trailer `AI-Assisted: <model>, <purpose>`, as the course asks. Use the model that was actually used for that change: Claude Sonnet 5.5 for entries 1 to 22, Claude Haiku 5.5 for entries 23 to 27.
 
 | Files | Purpose |
 |---|---|
-| `backend/` (app, tests, requirements.txt) | US-01 and US-02 code incl. Group 7 take-over (entries 8, 9, 16, 19, 20) |
-| `frontend/` (App.jsx, api.js, pages/, styles.css) | US-01 and US-02 screens (entries 8, 17, 21) |
-| `README.md`, `API.md`, `openapi.json` | Run instructions and API description (entries 8, 10, 18, 22) |
+| `backend/` (app, tests, requirements.txt) | US-01, US-02 incl. Group 7 take-over, and US-03 versions (entries 8, 9, 16, 19, 20, 23, 24, 25) |
+| `frontend/` (App.jsx, api.js, pages/, components/, styles.css) | US-01, US-02 and US-03 screens (entries 8, 17, 21, 26) |
+| `README.md`, `API.md`, `openapi.json` | Run instructions, API description, US-03 and Group 7 notes (entries 8, 10, 18, 22, 27) |
 | `openapi-draft-us06-us07.yaml` | Interface draft (entries 11, 22) |
 | `docs/group7/` | Files from Group 7 (not ours, only `openapi.json` is a conversion of their yaml, entry 20) |
 | `Group6_User_Stories_Board.md` | Stories, acceptance criteria, checklists (entries 1, 2, 7) |

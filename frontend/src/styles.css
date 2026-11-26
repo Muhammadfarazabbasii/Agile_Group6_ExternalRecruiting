@@ -94,3 +94,21 @@ h3 { margin: 16px 0 8px; font-size: 16px; }
 .g7-body .scroll { width: 100%; }
 .g7-results { margin: 0; padding-left: 18px; }
 .g7-body td:first-child, .g7-body th:first-child { width: 28px; padding-right: 0; }
+
+/* ---- US-03 contract versions ---- */
+.st-in_negotiation { background: #fff4dc; color: #7a5200; border-color: #f0dc9b; }
+.st-superseded { background: #f3f4f6; color: #6b7686; border-color: #dde1e7; }
+.version-panel { margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+.version-panel .scroll { margin-bottom: 4px; }
+.mt { margin-top: 8px; }
+.rate-editor { display: flex; flex-direction: column; gap: 8px; }
+.rate-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.rate-row select { min-width: 220px; }
+.rate-row input { min-width: 160px; flex: none; }
+.compare-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.compare-controls label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.change { font-size: 13px; }
+.change-added { color: #1e7a3c; font-weight: 600; }
+.change-removed { color: var(--danger); font-weight: 600; }
+.change-changed { color: #8a5a00; font-weight: 600; }
+.change-unchanged { color: var(--muted); }

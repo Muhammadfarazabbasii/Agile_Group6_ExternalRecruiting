@@ -4,11 +4,14 @@ Group 7's contract: docs/group7/openapi.yaml (draft 0.1.0). We only read:
   GET /suppliers                      -> [{id, name, status: active|inactive}]
   GET /framework-contracts            -> [{id, title, startDate, endDate, status: draft|rate_collection|active|ended,
                                            participations: [{supplierId, status: invited|rates_submitted|active|withdrawn}]}]
-  GET /framework-contracts/{id}       -> the same with participations (used if the list has no participations)
+
+Group 7 always includes the participations in the list (agreed with them), so we do not call
+GET /framework-contracts/{id} any more.
 
 Mapping to our model:
   Group 7 supplier id          -> Supplier.id (kept as it is, for example sup-01)
-  Group 7 framework contract id -> FrameworkContract.reference (for example fc-2027), one row per participating supplier
+  Group 7 framework contract id -> FrameworkContract.reference (for example fc-2027), one row per participating supplier.
+                                   Matched on the pair (contract id, supplier id), as Group 7 offers carry both
   startDate / endDate          -> valid_from / valid_to
   title                        -> title
   status of contract + participation -> base status, see map_contract_status
@@ -57,15 +60,8 @@ class Group7Client:
         return self._get_list("/suppliers")
 
     def list_framework_contracts(self) -> list[dict]:
-        contracts = self._get_list("/framework-contracts")
-        result = []
-        for contract in contracts:
-            if "participations" not in contract and contract.get("id"):
-                detail = self._get(f"/framework-contracts/{contract['id']}")
-                if isinstance(detail, dict):
-                    contract = detail
-            result.append(contract)
-        return result
+        # The list already carries the participations (agreed with Group 7), so one request is enough.
+        return self._get_list("/framework-contracts")
 
 
 def get_group7_client() -> Group7Client:

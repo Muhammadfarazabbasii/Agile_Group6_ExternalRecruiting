@@ -2,7 +2,7 @@
 import uuid
 from datetime import date, datetime, timezone
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -100,3 +100,56 @@ class FrameworkContract(Base):
     base_status: Mapped[str] = mapped_column(String(20), default="DRAFT")
 
     supplier: Mapped[Supplier] = relationship(back_populates="contracts")
+    versions: Mapped[list["ContractVersion"]] = relationship(
+        back_populates="contract", order_by="ContractVersion.version_number"
+    )
+
+
+class ContractVersion(Base):
+    """US-03: one negotiation round of a framework contract, with the price limits agreed in that round.
+
+    `status` is DRAFT, IN_NEGOTIATION, ACTIVE or SUPERSEDED. The moves between them are in version_rules.py.
+    The partial unique index allows at most one ACTIVE version per framework contract. The database enforces it,
+    not only the code.
+    """
+
+    __tablename__ = "contract_version"
+    __table_args__ = (
+        UniqueConstraint("framework_contract_id", "version_number"),
+        Index(
+            "uq_one_active_version_per_contract",
+            "framework_contract_id",
+            unique=True,
+            sqlite_where=text("status = 'ACTIVE'"),
+            postgresql_where=text("status = 'ACTIVE'"),
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    framework_contract_id: Mapped[str] = mapped_column(ForeignKey("framework_contract.id"))
+    version_number: Mapped[int] = mapped_column(Integer)
+    version_date: Mapped[date] = mapped_column(Date)
+    status: Mapped[str] = mapped_column(String(20), default="DRAFT")
+    travel_surcharge_cap: Mapped[float | None] = mapped_column(Numeric(10, 2, asdecimal=False), nullable=True)
+
+    contract: Mapped[FrameworkContract] = relationship(back_populates="versions")
+    rates: Mapped[list["ContractRate"]] = relationship(
+        back_populates="version", cascade="all, delete-orphan", order_by="ContractRate.id"
+    )
+
+
+class ContractRate(Base):
+    """US-03: maximum daily rate for one role and seniority level within one contract version."""
+
+    __tablename__ = "contract_rate"
+    __table_args__ = (UniqueConstraint("contract_version_id", "role_id", "seniority_code"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    contract_version_id: Mapped[str] = mapped_column(ForeignKey("contract_version.id"))
+    role_id: Mapped[str] = mapped_column(ForeignKey("role.id"))
+    seniority_code: Mapped[str] = mapped_column(ForeignKey("seniority_level.code"))
+    max_daily_rate: Mapped[float] = mapped_column(Numeric(10, 2, asdecimal=False))
+    currency: Mapped[str] = mapped_column(String(3), default="EUR")
+
+    version: Mapped[ContractVersion] = relationship(back_populates="rates")
+    role: Mapped[Role] = relationship()

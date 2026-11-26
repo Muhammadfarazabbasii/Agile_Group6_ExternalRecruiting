@@ -1,10 +1,10 @@
 # Group 6 External Recruiting API (v0.1.0, Sprint 1)
 
-Machine-readable spec: `openapi.json` (OpenAPI 3, 26 operations). Base URL for now: `http://localhost:8000` (cloud URL follows in Sprint 2).
+Machine-readable spec: `openapi.json` (OpenAPI 3.1, 34 operations). Base URL locally: `http://localhost:8000`. After deployment on render.com the address changes; it is configuration, not code.
 Live Swagger page while the backend runs: `http://localhost:8000/docs`.
-All bodies are JSON. IDs are text. Suppliers and framework contract references may be Group 7 IDs such as `sup-01`, everything else is a UUID. Dates are `YYYY-MM-DD`. Seniority levels are codes: `JUNIOR`, `SENIOR`, `EXPERT`.
+All bodies are JSON. Our responses and requests use snake_case (agreed with Group 7, who use our names as they are). Everything we send to Group 7 is camelCase. IDs are text. Suppliers and framework contract references may be Group 7 IDs such as `sup-01`, everything else is a UUID. Dates are `YYYY-MM-DD`. Seniority levels are codes: `JUNIOR`, `SENIOR`, `EXPERT`.
 
-Implemented so far: US-01 role catalogue, US-02 suppliers and framework contracts (including take-over from Group 7).
+Implemented so far: US-01 role catalogue, US-02 suppliers and framework contracts (including take-over from Group 7), US-03 contract versions with rates and comparison.
 Interfaces for requests and events (US-06, US-07) are only a draft, see `openapi-draft-us06-us07.yaml`.
 
 ## Who may call what
@@ -116,6 +116,8 @@ We call Group 7's API (`GET /suppliers`, `GET /framework-contracts`, address in 
 
 Mapping: Group 7 supplier `id` = our supplier `id`. Group 7 contract `id` = our contract `reference`. `startDate`/`endDate` = `valid_from`/`valid_to`. `title` = `title`. Status from contract status and participation status, see README ("Decisions we made on our own"). Every take-over is written to the audit trail with action `IMPORT`.
 
+Group 7 always includes the participations in `GET /framework-contracts`, so we read only that list. A contract is matched by the pair (contract ID, supplier ID), as Group 7 offers carry both. Their offers are not used yet (US-07).
+
 Example `GET /api/suppliers?selectable=true`:
 
 ```json
@@ -139,13 +141,58 @@ Example `GET /api/suppliers?selectable=true`:
 ]
 ```
 
+## Contract versions and negotiation (US-03)
+
+A framework contract can have many versions, one per negotiation round. A version carries the price limits of that round: the maximum daily rate per role and seniority level (EUR) and an optional travel surcharge cap. Changes need the Sourcing Manager. Reading is open to everyone.
+
+### Version status
+
+| Status | Meaning | Who sets it |
+|---|---|---|
+| `DRAFT` | Being prepared | Created as draft (default) |
+| `IN_NEGOTIATION` | Being negotiated | Person, from `DRAFT` |
+| `ACTIVE` | The agreed price limits | Person, from `DRAFT` or `IN_NEGOTIATION` |
+| `SUPERSEDED` | Replaced by a newer active version | Automatic only, when a newer version is activated |
+
+Only one version per framework contract can be `ACTIVE`. The database enforces this as well. Activating a version sets the previous `ACTIVE` one to `SUPERSEDED`. `ACTIVE` and `SUPERSEDED` versions are read only: their rates and cap cannot be changed (409). `SUPERSEDED` is final.
+
+### Endpoints
+
+| Method | Path | Body | Notes |
+|---|---|---|---|
+| GET | `/api/framework-contracts/{id}/versions` | | All versions, oldest first, each with its rates |
+| POST | `/api/framework-contracts/{id}/versions` | `{"status": "DRAFT", "version_date": "2026-11-26", "copy_previous": true}` | 201. `version_date` defaults to today. `copy_previous: true` copies the rates and travel cap of the latest version; rates of deactivated roles are left out. 409 if there is no version to copy from or the contract is terminated |
+| GET | `/api/contract-versions/{id}` | | One version with its rates. `editable` tells whether it can still be changed |
+| PUT | `/api/contract-versions/{id}/rates` | `{"travel_surcharge_cap": 60, "rates": [{"role_id": "...", "seniority": "SENIOR", "max_daily_rate": 850}]}` | Replaces all rates and the cap. 422 for a role that does not exist or is deactivated, a role and level given twice, or a rate not above 0. 409 if the version is `ACTIVE` or `SUPERSEDED` |
+| POST | `/api/contract-versions/{id}/status` | `{"status": "IN_NEGOTIATION"}` or `{"status": "ACTIVE"}` | 409 if the move is not allowed (for example from `ACTIVE` back to `IN_NEGOTIATION`, or from `SUPERSEDED`). Activation supersedes the previous active version |
+| GET | `/api/framework-contracts/{id}/versions/compare?from_version=1&to_version=2` | | Rate by rate comparison by version number. Each row: `change` (`added`, `removed`, `changed`, `unchanged`), `from_rate`, `to_rate`, `delta` (to minus from). Also the travel cap of both versions |
+
+Example version (`GET /api/contract-versions/{id}`):
+
+```json
+{
+  "id": "3f0c...",
+  "framework_contract_id": "14081584-42fe-450f-9189-1cbae83fe6f6",
+  "version_number": 2,
+  "version_date": "2026-11-26",
+  "status": "ACTIVE",
+  "travel_surcharge_cap": 60.0,
+  "editable": false,
+  "rates": [
+    { "role_id": "7c1e...", "role_name": "Backend Developer", "seniority": "SENIOR", "max_daily_rate": 850.0, "currency": "EUR" }
+  ]
+}
+```
+
+Every change (create, copy, rates saved, status change, activation and supersede) is written to the audit trail with entity `contract_version`.
+
 ## Audit trail (all stories)
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/api/audit-log?limit=50&entity=supplier&entity=framework_contract` | Sourcing Manager only, newest first. `entity` is optional and can be repeated. Values so far: `role_category`, `role`, `supplier`, `framework_contract`. Action `IMPORT` = taken over from Group 7 |
+| GET | `/api/audit-log?limit=50&entity=supplier&entity=framework_contract&entity=contract_version` | Sourcing Manager only, newest first. `entity` is optional and can be repeated. Values so far: `role_category`, `role`, `supplier`, `framework_contract`, `contract_version`. Action `IMPORT` = taken over from Group 7 |
 
-Every change (create, rename, deactivate, activate, terminate, date change) is stored with user, time, entity, action and detail.
+Every change (create, rename, deactivate, activate, terminate, date change, rates saved, status change, supersede) is stored with user, time, entity, action and detail.
 
 ## Error format
 
@@ -157,4 +204,6 @@ Codes: `403` wrong role, `404` unknown ID, `409` conflict (duplicate, overlap, i
 
 ## Still to be agreed with other groups
 
-Event schemas, expert IDs, volume unit, naming style (Group 7 uses camelCase, our implemented API uses snake_case), cloud URL (see messages to Groups 1, 2, 3, 4, 5, 7).
+Event schemas and expert IDs, volume unit, cloud URL (see messages to Groups 1, 2, 3, 4, 5, 7).
+Agreed with Group 7: naming (camelCase for what we send, snake_case for our API as it is), role IDs from `GET /api/catalogue` (we are the only owner of the catalogue), and the status mapping for the take-over.
+Open with Group 7: `/sourcing-requests` and the `RequestSent` event. Group 7 is waiting for our draft.
