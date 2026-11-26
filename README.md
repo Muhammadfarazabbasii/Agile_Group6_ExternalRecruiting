@@ -54,7 +54,7 @@ cd backend
 python -m pytest
 ```
 
-Expected: `124 passed` (16 for US-01, 29 for US-02, 30 for the Group 7 take-over, 49 for US-03). The tests use a fake Group 7, no real connection is needed.
+Expected: `130 passed` (16 for US-01, 29 for US-02, 30 for the Group 7 take-over, 49 for US-03, 6 for the audit change feed). The tests use a fake Group 7, no real connection is needed.
 
 ## Try US-02 by hand
 

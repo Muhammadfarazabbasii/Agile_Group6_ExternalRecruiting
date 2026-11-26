@@ -229,11 +229,20 @@ def get_catalogue(db: Session = Depends(get_db)):
 def list_audit_log(
     limit: int = 50,
     entity: list[str] | None = Query(default=None, description="Only these entities, e.g. role, supplier"),
+    after_id: int | None = Query(
+        default=None,
+        description="Change feed: only entries with a larger id than this, oldest first. "
+        "Store the last id you processed and pass it here to get only new changes.",
+    ),
     _: User = Depends(require_sourcing_manager),
     db: Session = Depends(get_db),
 ):
     limit = max(1, min(limit, 500))
-    q = select(AuditLog).order_by(AuditLog.id.desc()).limit(limit)
+    if after_id is not None:
+        # Change feed for other groups: ids are unique and increase with every change.
+        q = select(AuditLog).where(AuditLog.id > after_id).order_by(AuditLog.id.asc()).limit(limit)
+    else:
+        q = select(AuditLog).order_by(AuditLog.id.desc()).limit(limit)
     if entity:
         q = q.where(AuditLog.entity.in_(entity))
     return db.scalars(q).all()

@@ -191,8 +191,37 @@ Every change (create, copy, rates saved, status change, activation and supersede
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/audit-log?limit=50&entity=supplier&entity=framework_contract&entity=contract_version` | Sourcing Manager only, newest first. `entity` is optional and can be repeated. Values so far: `role_category`, `role`, `supplier`, `framework_contract`, `contract_version`. Action `IMPORT` = taken over from Group 7 |
+| GET | `/api/audit-log?after_id=<id>&limit=100` | Change feed (see below). Sourcing Manager only, oldest first |
 
 Every change (create, rename, deactivate, activate, terminate, date change, rates saved, status change, supersede) is stored with user, time, entity, action and detail.
+
+### Change feed (for polling)
+
+Every audit entry has an `id` that is unique and grows with every change. To get changes without webhooks, a client:
+
+1. Reads the full data once with the list endpoints (snapshot).
+2. Keeps the last `id` it has processed, starting at `0`.
+3. Calls `GET /api/audit-log?after_id=<last id>&limit=100`. The response holds only newer entries, oldest first. Empty list = nothing new.
+4. For each entry, re-reads the changed object with its GET endpoint (`entity` and `entity_id` say which one) and stores the new `id` as the cursor.
+
+Example entry (`entity` `contract_version`, `entity_id` = version ID):
+
+```json
+{
+  "id": 42,
+  "created_at": "2026-11-26T09:14:03Z",
+  "actor": "Anna",
+  "entity": "contract_version",
+  "entity_id": "b7c1d2e3-0000-4000-8000-000000000001",
+  "action": "STATUS",
+  "detail": "IN_NEGOTIATION -> ACTIVE"
+}
+```
+
+Notes:
+- The feed does not push: webhooks and automatic retries are not implemented yet. A client must poll.
+- `detail` is text for people to read. Use `entity`, `entity_id` and `action` in code, not `detail`.
+- The feed is for Sourcing Manager accounts only (development stand-in, see README). Group 5 needs a read account before it can use it.
 
 ## Error format
 

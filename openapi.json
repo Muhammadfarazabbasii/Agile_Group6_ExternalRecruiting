@@ -732,6 +732,24 @@
             "description": "Only these entities, e.g. role, supplier"
           },
           {
+            "name": "after_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Change feed: only entries with a larger id than this, oldest first. Store the last id you processed and pass it here to get only new changes.",
+              "title": "After Id"
+            },
+            "description": "Change feed: only entries with a larger id than this, oldest first. Store the last id you processed and pass it here to get only new changes."
+          },
+          {
             "name": "x-user-role",
             "in": "header",
             "required": false,
