@@ -35,6 +35,7 @@ How to read the columns:
 | 20 | 23.11.2026 | Take-over from Group 7: client (`group7_client.py`), status mapping, endpoints `/api/group7/suppliers` and `/api/group7/import-suppliers`, 29 tests with a fake Group 7 incl. a contract test against their schema (`docs/group7/openapi.json`) | Same request | Pending review | 74 tests pass. Not tested against the real Group 7 server, only a fake one. The status mapping (withdrawn, invited, ended) is our assumption and must be confirmed with Group 7 |
 | 21 | 23.11.2026 | Frontend: panel "Take over suppliers from Group 7", contract title field, ID hint | Same request | Pending review | Build passes. Assistant ran a Chromium test against a small fake Group 7 server (preview, take over 2 suppliers, result list, audit trail, contract title) and looked at the screenshot. No JavaScript errors. Team must test by hand with Group 7's real server |
 | 22 | 23.11.2026 | Update README, API.md, regenerate `openapi.json` (28 operations), remove `format: uuid` from supplier IDs in `openapi-draft-us06-us07.yaml` | Asked for OpenAPI JSON, AI usage, API and README files | Pending review | Both OpenAPI files validated with `openapi-spec-validator`. Statements checked against code and tests by the assistant |
+| 23 | 25.11.2026 | Prepare cloud deployment with Render (backend, frontend) and Neon (database): `database.py`, `requirements.txt`, `main.py` (CORS variable, `/health/db`, `/`), `render.yaml`, `.env.example`, `DEPLOY.md`, new `frontend/src/styles.css`, `index.html`, test for the database address | Gave the repository (branch haris) as zip and asked for everything needed to push and deploy on Render with a free database and a more professional look | Pending review | Only a syntax compile and a check of the address function were done by the assistant. The assistant could NOT run pytest or the frontend build (no internet in its environment), and did not test against Neon or Render or look at the screens in a browser. Free tier facts come from Render documentation and third-party articles. Team must run `python -m pytest`, `npm run build`, look at both pages, and deploy |
 
 ## AI-assisted files in the repository
 
@@ -42,9 +43,10 @@ Mark these in commits with the trailer `AI-Assisted: Claude Sonnet 5.5, <purpose
 
 | Files | Purpose |
 |---|---|
-| `backend/` (app, tests, requirements.txt) | US-01 and US-02 code incl. Group 7 take-over (entries 8, 9, 16, 19, 20) |
-| `frontend/` (App.jsx, api.js, pages/, styles.css) | US-01 and US-02 screens (entries 8, 17, 21) |
-| `README.md`, `API.md`, `openapi.json` | Run instructions and API description (entries 8, 10, 18, 22) |
+| `backend/` (app, tests, requirements.txt) | US-01 and US-02 code incl. Group 7 take-over, Neon support (entries 8, 9, 16, 19, 20, 23) |
+| `frontend/` (App.jsx, api.js, pages/, styles.css) | US-01 and US-02 screens, new styles (entries 8, 17, 21, 23) |
+| `README.md`, `API.md`, `openapi.json` | Run instructions and API description (entries 8, 10, 18, 22, 23) |
+| `render.yaml`, `DEPLOY.md`, `backend/.env.example` | Render and Neon deployment (entry 23) |
 | `openapi-draft-us06-us07.yaml` | Interface draft (entries 11, 22) |
 | `docs/group7/` | Files from Group 7 (not ours, only `openapi.json` is a conversion of their yaml, entry 20) |
 | `Group6_User_Stories_Board.md` | Stories, acceptance criteria, checklists (entries 1, 2, 7) |

@@ -4,7 +4,7 @@ Sprint 1 so far:
 - US-01 Maintain Role Catalogue (role categories, roles, seniority levels)
 - US-02 Manage Suppliers and Framework Contracts, including taking over suppliers and contracts from Group 7 (Expert Supplier)
 
-- Backend: Python, FastAPI, SQLAlchemy, SQLite (file `backend/group6.db`, created automatically)
+- Backend: Python, FastAPI, SQLAlchemy. Local: SQLite (file `backend/group6.db`, created automatically). Cloud: Neon Postgres via the variable `DATABASE_URL`
 - Frontend: React + Vite
 - API: `openapi.json` and `API.md` (live at http://localhost:8000/docs while the backend runs)
 - Interface draft for the next stories: `openapi-draft-us06-us07.yaml`
@@ -53,7 +53,7 @@ cd backend
 python -m pytest
 ```
 
-Expected: `74 passed` (16 for US-01, 29 for US-02, 29 for the Group 7 take-over). The tests use a fake Group 7, no real connection is needed.
+Expected: `77 passed` (16 for US-01, 29 for US-02, 29 for the Group 7 take-over, 3 for the database address). The tests use a fake Group 7, no real connection is needed.
 
 ## Try US-02 by hand
 
@@ -72,6 +72,24 @@ Group 7 gave us their API contract (`docs/group7/openapi.yaml`). Their IDs are t
 3. Tick suppliers, click "Take over". Existing suppliers and contracts are never changed, so you can repeat it safely.
 4. If Group 7 is not running you see the message "Group 7 API is not reachable" (HTTP 502). Nothing is changed.
 
+## Deploy to the cloud (Render + Neon)
+
+Everything is prepared in this repository: `render.yaml` (Render settings), `backend/.env.example`, and `DEPLOY.md` with the step-by-step guide.
+
+Short version:
+1. Create a Neon project (Frankfurt) and copy the connection string.
+2. Push the repository to GitHub.
+3. On Render choose New, Blueprint, pick the repository, paste `DATABASE_URL` (Neon) and `GROUP7_BASE_URL`, Apply.
+4. Put the real backend URL into the `/api/*` rewrite in `render.yaml` if it differs, check `/health`, `/health/db` and `/docs`.
+
+Things to know:
+- Without `DATABASE_URL` the backend uses the local SQLite file. On Render SQLite would be erased at every restart, so always set the variable there.
+- Free Render web services sleep after 15 minutes without requests, the next request takes about a minute. Use `/health` for pings, never `/health/db` (it wakes Neon and uses its free compute hours).
+- Tables are created automatically at start and are not migrated.
+- The role check (`X-User-Role` header) is a development stand-in. On a public URL anyone can change data. Use test data only.
+- Other groups call the backend URL, for example `https://group6-backend.onrender.com/api/catalogue`.
+- `psycopg` (the Postgres driver) is installed only on Python below 3.15. For local work with SQLite it is not needed.
+
 ## Trying the API in the browser (Swagger page)
 
 Open http://localhost:8000/docs. For endpoints that change data, click "Try it out" and type
@@ -86,7 +104,7 @@ Open http://localhost:8000/docs. For endpoints that change data, click "Try it o
 | `Microsoft Visual C++ 14.0 or greater is required` | A package has no ready-made build for your Python version. Install Python 3.12 and repeat |
 | Frontend shows "Cannot reach the backend" | Terminal 1 is not running, or not on port 8000 |
 | Port 8000 already in use | Close the other program, or start with `--port 8001` and change the port in `frontend/vite.config.js` |
-| Want a clean database | Stop the backend and delete `backend/group6.db` |
+| Want a clean database | Stop the backend and delete `backend/group6.db` (cloud: see `DEPLOY.md`) |
 | A table has a new column after `git pull` | Tables are not migrated yet. Stop the backend, delete `backend/group6.db`, start again |
 
 ## How the pieces fit
@@ -99,7 +117,7 @@ Where things live (a new story adds files, it does not create new folders):
 
 ```
 backend/app/
-  main.py                 one line per router
+  main.py                 one line per router, health checks
   models.py               database tables
   audit.py                audit trail helper (all stories)
   auth.py                 role check (development stand-in)

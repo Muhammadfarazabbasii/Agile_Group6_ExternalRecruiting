@@ -1,7 +1,7 @@
 # Group 6 External Recruiting API (v0.1.0, Sprint 1)
 
-Machine-readable spec: `openapi.json` (OpenAPI 3, 26 operations). Base URL for now: `http://localhost:8000` (cloud URL follows in Sprint 2).
-Live Swagger page while the backend runs: `http://localhost:8000/docs`.
+Machine-readable spec: `openapi.json` (OpenAPI 3, 26 operations). Base URL locally: `http://localhost:8000`. Cloud (Render): `https://group6-backend.onrender.com` (placeholder, replace with the real URL after the first deploy). The free instance sleeps when idle, so the first call can take about a minute.
+Live Swagger page: `<base URL>/docs`.
 All bodies are JSON. IDs are text. Suppliers and framework contract references may be Group 7 IDs such as `sup-01`, everything else is a UUID. Dates are `YYYY-MM-DD`. Seniority levels are codes: `JUNIOR`, `SENIOR`, `EXPERT`.
 
 Implemented so far: US-01 role catalogue, US-02 suppliers and framework contracts (including take-over from Group 7).
@@ -19,7 +19,7 @@ This is a development stand-in, real authentication follows. Wrong role gives `4
 | GET | `/api/catalogue` | Active role categories with their active roles (`id`, `name`) plus the seniority levels. Use these IDs as `roleId` and `seniorityLevel`. |
 | GET | `/api/seniority-levels` | `[{code, label}]` in order JUNIOR, SENIOR, EXPERT |
 | GET | `/api/suppliers?selectable=true` | Suppliers that can receive requests today (see rule below), each with its `id` = supplierId |
-| GET | `/health` | `{"status": "ok"}` |
+| GET | `/health` | `{"status": "ok"}` (does not touch the database, safe for pings) |
 
 Example `GET /api/catalogue`:
 
