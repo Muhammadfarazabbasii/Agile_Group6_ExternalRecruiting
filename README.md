@@ -99,6 +99,10 @@ Group 7 gave us their API contract (`docs/group7/openapi.yaml`). Their IDs are t
 Open http://localhost:8000/docs. For endpoints that change data, click "Try it out" and type
 `SOURCING_MANAGER` into the `x-user-role` field. The default is `HIRING_MANAGER` (read only), which gives 403.
 
+## Putting it in the cloud
+
+See `DEPLOY.md` (Azure and Render, step by step, settings `DATABASE_URL`, `ALLOWED_ORIGINS`, `GROUP7_BASE_URL`, `VITE_API_BASE_URL`).
+
 ## Common problems
 
 | Problem | Fix |

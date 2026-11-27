@@ -1,0 +1,3 @@
+# Used inside the Docker image only. The PostgreSQL driver is not needed for local work with SQLite.
+-r requirements.txt
+psycopg[binary]>=3.1

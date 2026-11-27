@@ -1,6 +1,10 @@
 // All calls to the Python backend live here.
 // The "user" is sent as headers. This is a development stand-in for a real login.
 
+// In the cloud the frontend and the backend have different addresses. Set VITE_API_BASE_URL when building
+// (for example https://my-backend.azurewebsites.net). Empty means: same address, as with the Vite dev proxy.
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+
 let currentUser = { name: "Anna", role: "SOURCING_MANAGER" };
 
 export function setUser(user) {
@@ -8,7 +12,7 @@ export function setUser(user) {
 }
 
 async function request(path, options = {}) {
-  const res = await fetch(path, {
+  const res = await fetch(API_BASE + path, {
     ...options,
     headers: {
       "Content-Type": "application/json",

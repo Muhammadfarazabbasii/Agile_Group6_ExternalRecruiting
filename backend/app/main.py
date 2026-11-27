@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -26,9 +27,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Web addresses that may call this API from a browser. In the cloud set ALLOWED_ORIGINS to the frontend URL(s),
+# separated by commas, for example https://my-frontend.azurestaticapps.net
+DEFAULT_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+allowed_origins = [o.strip().rstrip("/") for o in os.getenv("ALLOWED_ORIGINS", DEFAULT_ORIGINS).split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
