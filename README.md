@@ -4,6 +4,7 @@ Sprint 1 so far:
 - US-01 Maintain Role Catalogue (role categories, roles, seniority levels)
 - US-02 Manage Suppliers and Framework Contracts, including taking over suppliers and contracts from Group 7 (Expert Supplier)
 - US-03 Negotiate Contract Versions (one version per negotiation round, price limits per role and level, one ACTIVE version, comparison)
+- US-04 Maximum daily rates per version, role and level (rate grid, single-rate CRUD, lookup, locking)
 
 - Backend: Python, FastAPI, SQLAlchemy, SQLite (file `backend/group6.db`, created automatically)
 - Frontend: React + Vite
@@ -44,7 +45,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. There are two tabs: "Role catalogue" (US-01) and "Suppliers and contracts" (US-02, with the versions of US-03).
+Open http://localhost:5173. There are two tabs: "Role catalogue" (US-01) and "Suppliers and contracts" (US-02, with the versions and the rate grid of US-03 and US-04).
 Use the "Logged in as" dropdown to switch between Sourcing Manager (can edit) and Hiring Manager (read only).
 
 ## 3. Run the tests (optional)
@@ -54,7 +55,7 @@ cd backend
 python -m pytest
 ```
 
-Expected: `130 passed` (16 for US-01, 29 for US-02, 30 for the Group 7 take-over, 49 for US-03, 6 for the audit change feed). The tests use a fake Group 7, no real connection is needed.
+Expected: `174 passed` (16 for US-01, 29 for US-02, 30 for the Group 7 take-over, 49 for US-03, 6 for the audit change feed, 44 for US-04). The tests use a fake Group 7, no real connection is needed.
 
 ## Try US-02 by hand
 
@@ -72,6 +73,16 @@ Group 7 gave us their API contract (`docs/group7/openapi.yaml`). Their IDs are t
 2. In the Suppliers tab click "Take over suppliers from Group 7". You see their suppliers and framework contracts and how we would register each one.
 3. Tick suppliers, click "Take over". Existing suppliers and contracts are never changed, so you can repeat it safely.
 4. If Group 7 is not running you see the message "Group 7 API is not reachable" (HTTP 502). Nothing is changed.
+
+## Try US-04 by hand
+
+1. Sourcing Manager, Suppliers tab: open a supplier, click "Versions" on a framework contract, then "Show rates" on a version.
+2. The rates are a grid: one row per role, one column per level. "Not allowed" means no rate, so that role and level cannot be used for this supplier.
+3. On a DRAFT or IN_NEGOTIATION version click "Edit rates". Type a rate into a cell. Leave a cell empty to make that combination not allowed. Press Enter or "Save rates" to save.
+4. Enter 0 or a negative number: the form shows which cell is wrong and does not save.
+5. Click "Discard changes" with unsaved edits: you are asked first.
+6. On an ACTIVE or SUPERSEDED version there is no "Edit rates" button. The banner says the rates are read only.
+7. Hiring Manager: the same grid, read only.
 
 ## Try US-03 by hand
 
@@ -97,8 +108,9 @@ Open http://localhost:8000/docs. For endpoints that change data, click "Try it o
 | `Microsoft Visual C++ 14.0 or greater is required` | A package has no ready-made build for your Python version. Install Python 3.12 and repeat |
 | Frontend shows "Cannot reach the backend" | Terminal 1 is not running, or not on port 8000 |
 | Port 8000 already in use | Close the other program, or start with `--port 8001` and change the port in `frontend/vite.config.js` |
+| On a version only the travel surcharge cap can be edited, not the rates | There are no active roles yet, so the rate grid has no rows. Add roles in the "Role catalogue" tab |
 | Want a clean database | Stop the backend and delete `backend/group6.db` |
-| A table has a new column after `git pull` | Tables are not migrated yet. Stop the backend, delete `backend/group6.db`, start again. (US-03 only adds new tables, so existing data can stay) |
+| A table has a new column after `git pull` | Tables are not migrated yet. Stop the backend, delete `backend/group6.db`, start again. (US-03 only adds new tables, so existing data can stay. US-04 adds no column, but the currency column no longer has a default, so rates saved without a currency are refused) |
 
 ## How the pieces fit
 
@@ -119,10 +131,11 @@ backend/app/
   routers/catalogue.py    US-01 endpoints
   routers/suppliers.py    US-02 endpoints
   routers/group7.py       US-02 preview and take-over from Group 7
-  routers/versions.py     US-03 endpoints: versions, rates, status, comparison
+  routers/versions.py     US-03 endpoints: versions, bulk rates, status, comparison
+  routers/rates.py        US-04 endpoints: single rate create, read, change, delete and the max-rate lookup
   group7_client.py        reads Group 7's REST API and maps their statuses to ours
   schemas_group7.py       shapes for the Group 7 endpoints
-  schemas_versions.py     shapes for versions, rates and comparison
+  schemas_versions.py     shapes for versions, rates (currency mandatory) and comparison
 backend/tests/            one test file per story (test_group7.py: take-over with a fake Group 7;
                           test_versions.py: status rules, one ACTIVE version, blocked edits, roles)
 docs/group7/              Group 7's API contract (openapi.yaml, openapi.json) and their examples
@@ -131,7 +144,7 @@ frontend/src/
   api.js                  all backend calls
   pages/Catalogue.jsx     US-01 screen
   pages/Suppliers.jsx     US-02 screen (supplier detail shows the versions of each contract)
-  components/ContractVersions.jsx   US-03 panel: versions, rates, activation, comparison
+  components/ContractVersions.jsx   US-03/US-04 panel: versions, rate grid, activation, comparison
 ```
 
 ## US-01: acceptance criteria
@@ -176,6 +189,34 @@ Checklist of the story, and where it is done:
 5. Version list and compare screen: `components/ContractVersions.jsx`, `GET .../versions/compare`
 6. Unit tests for status transitions: `tests/test_versions.py`, the first tests (`test_transition_table` and others)
 7. Test role permissions: `test_only_sourcing_manager_can_change_versions`, `test_everyone_can_read_versions_and_comparison`
+
+## US-04: acceptance criteria (maximum daily rate per version, role and level)
+
+Internal story, no other group links to it. Group 5 may use the rates for their KPIs (through the API and the audit feed).
+
+| Acceptance criterion | Where |
+|---|---|
+| Exactly one maximum daily rate per version + role + level | Unique constraint `contract_version_id, role_id, seniority_code` on `contract_rate` (`models.py`). The API answers 409 for a second one. Tests: `test_one_rate_per_role_and_level_in_a_version`, `test_database_refuses_a_second_rate_for_the_same_role_and_level` |
+| Rate and currency are mandatory, rate must be greater than zero | `RateIn` in `schemas_versions.py` (currency has no default in `models.py` either). Tests: `test_every_field_is_mandatory`, `test_rate_must_be_above_zero_and_not_absurd`, `test_only_the_agreed_currency_is_accepted` |
+| Rates of an ACTIVE or SUPERSEDED version cannot be changed | `refuse_if_locked` in `routers/rates.py` (add, change, delete) and `save_rates` in `routers/versions.py` (bulk). Tests: `test_rates_of_a_locked_version_cannot_be_added_changed_or_deleted`, reads still allowed in `test_rates_of_a_locked_version_stay_readable` |
+| A missing rate means this role and level is not allowed for the supplier | Lookup `GET /api/contract-versions/{id}/max-rate` answers 404 "Not allowed". The grid shows "Not allowed" for empty cells. Test: `test_lookup_for_a_missing_combination_says_not_allowed` |
+| The rate table is a grid (roles x levels) on the version page | `RateGridTable` in `components/ContractVersions.jsx`. Checked in headless Chrome (`browser_check_us04.py`, 15 checks) |
+
+Checklist of the story, and where it is done:
+1. Database model with unique constraint: `models.py` (`ContractRate`)
+2. CRUD endpoints for rates: `routers/rates.py` (create, read, change, delete), bulk replace in `routers/versions.py`
+3. Validation (mandatory fields, rate > 0, locked versions): `schemas_versions.py`, `refuse_if_locked`
+4. Rate grid screen: `components/ContractVersions.jsx`, `VersionRates` and `RateGridTable`
+5. Lookup "max rate for version + role + level": `GET /api/contract-versions/{id}/max-rate`
+6. Unit tests for uniqueness and locking: `tests/test_rates.py`
+7. Role permissions: `test_only_the_sourcing_manager_can_change_rates`, `test_everyone_can_read_rates_and_the_lookup`
+
+Decisions for the team to confirm (US-04):
+- Only `EUR` is accepted. More currencies: add the code to `Currency` in `schemas_versions.py`.
+- "Not allowed" is a 404 on the lookup, not an empty result with status 200. Group 5 and the other groups should use this.
+- The rate is a **maximum** (cap) per role and level, not an average. Group 5 asked for averages as a starting point; this must be agreed with them.
+- The grid saves all rates at once (the bulk endpoint), so a half-saved grid cannot happen. The single-rate endpoints exist for other groups and tests.
+- A deactivated role cannot keep a rate in a new save. The grid asks the user to clear its cells first.
 
 ## Decisions we made on our own (please confirm in the team)
 

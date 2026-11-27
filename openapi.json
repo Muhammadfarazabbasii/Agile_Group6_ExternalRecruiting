@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Group 6 External Recruiting API",
-    "description": "Sprint 1: role catalogue (US-01), suppliers and framework contracts incl. take-over from Group 7 (US-02), contract versions with rates and comparison (US-03).",
+    "description": "Sprint 1: role catalogue (US-01), suppliers and framework contracts incl. take-over from Group 7 (US-02), contract versions with rates and comparison (US-03), maximum daily rates per role and level (US-04).",
     "version": "0.1.0"
   },
   "paths": {
@@ -1933,6 +1933,121 @@
             }
           }
         }
+      },
+      "get": {
+        "tags": [
+          "Maximum daily rates (US-04)"
+        ],
+        "summary": "List Rates",
+        "description": "All maximum daily rates of a version. Missing role/level combinations are not allowed.",
+        "operationId": "list_rates_api_contract_versions__version_id__rates_get",
+        "parameters": [
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RateOut"
+                  },
+                  "title": "Response List Rates Api Contract Versions  Version Id  Rates Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Maximum daily rates (US-04)"
+        ],
+        "summary": "Create Rate",
+        "operationId": "create_rate_api_contract_versions__version_id__rates_post",
+        "parameters": [
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/contract-versions/{version_id}/status": {
@@ -1994,6 +2109,242 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contract-versions/{version_id}/max-rate": {
+      "get": {
+        "tags": [
+          "Maximum daily rates (US-04)"
+        ],
+        "summary": "Get Max Rate",
+        "description": "The maximum daily rate for one role and level in one version. 404 means: not allowed for this supplier.",
+        "operationId": "get_max_rate_api_contract_versions__version_id__max_rate_get",
+        "parameters": [
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Version Id"
+            }
+          },
+          {
+            "name": "role_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Role ID from GET /api/catalogue",
+              "title": "Role Id"
+            },
+            "description": "Role ID from GET /api/catalogue"
+          },
+          {
+            "name": "seniority",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "JUNIOR",
+                "SENIOR",
+                "EXPERT"
+              ],
+              "type": "string",
+              "description": "JUNIOR, SENIOR or EXPERT",
+              "title": "Seniority"
+            },
+            "description": "JUNIOR, SENIOR or EXPERT"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contract-rates/{rate_id}": {
+      "get": {
+        "tags": [
+          "Maximum daily rates (US-04)"
+        ],
+        "summary": "Get Rate",
+        "operationId": "get_rate_api_contract_rates__rate_id__get",
+        "parameters": [
+          {
+            "name": "rate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rate Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Maximum daily rates (US-04)"
+        ],
+        "summary": "Update Rate",
+        "operationId": "update_rate_api_contract_rates__rate_id__patch",
+        "parameters": [
+          {
+            "name": "rate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rate Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RateUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Maximum daily rates (US-04)"
+        ],
+        "summary": "Delete Rate",
+        "description": "Removes a rate. The role and level become 'not allowed' in this version.",
+        "operationId": "delete_rate_api_contract_rates__rate_id__delete",
+        "parameters": [
+          {
+            "name": "rate_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Rate Id"
+            }
+          },
+          {
+            "name": "x-user-role",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "HIRING_MANAGER",
+              "title": "X-User-Role"
+            }
+          },
+          {
+            "name": "x-user-name",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anonymous",
+              "title": "X-User-Name"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -2735,15 +3086,22 @@
             "maximum": 100000.0,
             "exclusiveMinimum": 0.0,
             "title": "Max Daily Rate"
+          },
+          "currency": {
+            "type": "string",
+            "const": "EUR",
+            "title": "Currency"
           }
         },
         "type": "object",
         "required": [
           "role_id",
           "seniority",
-          "max_daily_rate"
+          "max_daily_rate",
+          "currency"
         ],
-        "title": "RateIn"
+        "title": "RateIn",
+        "description": "US-04: one maximum daily rate. Role, level, rate and currency are all mandatory; the rate must be above zero."
       },
       "RateOut": {
         "properties": {
@@ -2777,6 +3135,38 @@
           "currency"
         ],
         "title": "RateOut"
+      },
+      "RateUpdate": {
+        "properties": {
+          "max_daily_rate": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Daily Rate"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "EUR"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "title": "RateUpdate",
+        "description": "US-04: change the rate and/or the currency of one existing rate. At least one field is needed."
       },
       "RatesIn": {
         "properties": {

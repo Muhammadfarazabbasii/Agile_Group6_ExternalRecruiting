@@ -6,6 +6,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Seniority = Literal["JUNIOR", "SENIOR", "EXPERT"]
 VersionStatus = Literal["DRAFT", "IN_NEGOTIATION", "ACTIVE", "SUPERSEDED"]
+# US-04: rates are in one currency for now. To accept more, add the code here (team decision).
+Currency = Literal["EUR"]
 
 
 class VersionCreate(BaseModel):
@@ -17,9 +19,25 @@ class VersionCreate(BaseModel):
 
 
 class RateIn(BaseModel):
+    """US-04: one maximum daily rate. Role, level, rate and currency are all mandatory; the rate must be above zero."""
+
     role_id: str
     seniority: Seniority
     max_daily_rate: float = Field(gt=0, le=100000)
+    currency: Currency
+
+
+class RateUpdate(BaseModel):
+    """US-04: change the rate and/or the currency of one existing rate. At least one field is needed."""
+
+    max_daily_rate: float | None = Field(default=None, gt=0, le=100000)
+    currency: Currency | None = None
+
+    @model_validator(mode="after")
+    def something_to_change(self):
+        if self.max_daily_rate is None and self.currency is None:
+            raise ValueError("give max_daily_rate or currency to change")
+        return self
 
 
 class RatesIn(BaseModel):

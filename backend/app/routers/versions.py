@@ -221,6 +221,7 @@ def save_rates(
                 role_id=item.role_id,
                 seniority_code=item.seniority,
                 max_daily_rate=item.max_daily_rate,
+                currency=item.currency,
             )
         )
     version.travel_surcharge_cap = body.travel_surcharge_cap

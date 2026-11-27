@@ -89,8 +89,8 @@ def put_rates(client, version_id, rates, cap=None, headers=SOURCING_MANAGER):
     )
 
 
-def rate(role_id, seniority, amount):
-    return {"role_id": role_id, "seniority": seniority, "max_daily_rate": amount}
+def rate(role_id, seniority, amount, currency="EUR"):
+    return {"role_id": role_id, "seniority": seniority, "max_daily_rate": amount, "currency": currency}
 
 
 def audit(client):

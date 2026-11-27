@@ -1,6 +1,6 @@
 # Group 6 External Recruiting API (v0.1.0, Sprint 1)
 
-Machine-readable spec: `openapi.json` (OpenAPI 3.1, 34 operations). Base URL locally: `http://localhost:8000`. After deployment on render.com the address changes; it is configuration, not code.
+Machine-readable spec: `openapi.json` (OpenAPI 3.1, 40 operations). Base URL locally: `http://localhost:8000`. After deployment on render.com the address changes; it is configuration, not code.
 Live Swagger page while the backend runs: `http://localhost:8000/docs`.
 All bodies are JSON. Our responses and requests use snake_case (agreed with Group 7, who use our names as they are). Everything we send to Group 7 is camelCase. IDs are text. Suppliers and framework contract references may be Group 7 IDs such as `sup-01`, everything else is a UUID. Dates are `YYYY-MM-DD`. Seniority levels are codes: `JUNIOR`, `SENIOR`, `EXPERT`.
 
@@ -163,7 +163,7 @@ Only one version per framework contract can be `ACTIVE`. The database enforces t
 | GET | `/api/framework-contracts/{id}/versions` | | All versions, oldest first, each with its rates |
 | POST | `/api/framework-contracts/{id}/versions` | `{"status": "DRAFT", "version_date": "2026-11-26", "copy_previous": true}` | 201. `version_date` defaults to today. `copy_previous: true` copies the rates and travel cap of the latest version; rates of deactivated roles are left out. 409 if there is no version to copy from or the contract is terminated |
 | GET | `/api/contract-versions/{id}` | | One version with its rates. `editable` tells whether it can still be changed |
-| PUT | `/api/contract-versions/{id}/rates` | `{"travel_surcharge_cap": 60, "rates": [{"role_id": "...", "seniority": "SENIOR", "max_daily_rate": 850}]}` | Replaces all rates and the cap. 422 for a role that does not exist or is deactivated, a role and level given twice, or a rate not above 0. 409 if the version is `ACTIVE` or `SUPERSEDED` |
+| PUT | `/api/contract-versions/{id}/rates` | `{"travel_surcharge_cap": 60, "rates": [{"role_id": "...", "seniority": "SENIOR", "max_daily_rate": 850, "currency": "EUR"}]}` | Replaces all rates and the cap (used by the rate grid). 422 for a role that does not exist or is deactivated, a role and level given twice, a rate not above 0, or a missing currency. 409 if the version is `ACTIVE` or `SUPERSEDED` |
 | POST | `/api/contract-versions/{id}/status` | `{"status": "IN_NEGOTIATION"}` or `{"status": "ACTIVE"}` | 409 if the move is not allowed (for example from `ACTIVE` back to `IN_NEGOTIATION`, or from `SUPERSEDED`). Activation supersedes the previous active version |
 | GET | `/api/framework-contracts/{id}/versions/compare?from_version=1&to_version=2` | | Rate by rate comparison by version number. Each row: `change` (`added`, `removed`, `changed`, `unchanged`), `from_rate`, `to_rate`, `delta` (to minus from). Also the travel cap of both versions |
 
@@ -185,6 +185,29 @@ Example version (`GET /api/contract-versions/{id}`):
 ```
 
 Every change (create, copy, rates saved, status change, activation and supersede) is written to the audit trail with entity `contract_version`.
+
+## Maximum daily rates per role and level (US-04)
+
+Each contract version has exactly one maximum daily rate per role and seniority level. Role, level, rate and currency are all mandatory, and the rate must be above zero. A role and level without a rate is **not allowed** for the supplier. Rates of an `ACTIVE` or `SUPERSEDED` version cannot be changed (409). Reading is open to everyone. Changes need the Sourcing Manager.
+
+Currency: only `EUR` is accepted for now (`Currency` in `schemas_versions.py`). Adding another currency is a team decision.
+
+| Method | Path | Body | Notes |
+|---|---|---|---|
+| GET | `/api/contract-versions/{id}/rates` | | All rates of a version, sorted by role name and level |
+| GET | `/api/contract-versions/{id}/max-rate?role_id=...&seniority=SENIOR` | | The maximum rate for one version, role and level. **404 "Not allowed"** if there is no rate for this combination |
+| POST | `/api/contract-versions/{id}/rates` | `{"role_id": "...", "seniority": "SENIOR", "max_daily_rate": 900, "currency": "EUR"}` | 201. 409 if the combination already has a rate (use PATCH), or the version is locked. 422 for an unknown or deactivated role, a missing field, a rate not above 0, or another currency |
+| GET | `/api/contract-rates/{rate_id}` | | One rate |
+| PATCH | `/api/contract-rates/{rate_id}` | `{"max_daily_rate": 950}` and/or `{"currency": "EUR"}` | At least one field. 409 if the version is locked. 422 for an invalid value |
+| DELETE | `/api/contract-rates/{rate_id}` | | 204. Afterwards the role and level are not allowed in this version. 409 if the version is locked |
+
+Every add, change and removal is written to the audit trail with entity `contract_version` and actions `RATE_ADD`, `RATE_CHANGE` and `RATE_DELETE`.
+
+Example rate (`GET /api/contract-rates/{rate_id}`):
+
+```json
+{ "role_id": "7c1e...", "role_name": "Backend Developer", "seniority": "SENIOR", "max_daily_rate": 900.0, "currency": "EUR" }
+```
 
 ## Audit trail (all stories)
 

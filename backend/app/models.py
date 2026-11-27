@@ -139,7 +139,11 @@ class ContractVersion(Base):
 
 
 class ContractRate(Base):
-    """US-03: maximum daily rate for one role and seniority level within one contract version."""
+    """US-03/US-04: maximum daily rate for one role and seniority level within one contract version.
+
+    Exactly one rate per (version, role, seniority level): the unique constraint enforces it. A role and level without
+    a rate is not allowed for the supplier. Currency has no default, so it must always be given (US-04).
+    """
 
     __tablename__ = "contract_rate"
     __table_args__ = (UniqueConstraint("contract_version_id", "role_id", "seniority_code"),)
@@ -149,7 +153,7 @@ class ContractRate(Base):
     role_id: Mapped[str] = mapped_column(ForeignKey("role.id"))
     seniority_code: Mapped[str] = mapped_column(ForeignKey("seniority_level.code"))
     max_daily_rate: Mapped[float] = mapped_column(Numeric(10, 2, asdecimal=False))
-    currency: Mapped[str] = mapped_column(String(3), default="EUR")
+    currency: Mapped[str] = mapped_column(String(3))
 
     version: Mapped[ContractVersion] = relationship(back_populates="rates")
     role: Mapped[Role] = relationship()

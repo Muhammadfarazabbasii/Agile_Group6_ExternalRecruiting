@@ -48,6 +48,7 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--bord
 th { color: var(--muted); font-weight: 500; }
 tr.inactive td { color: var(--muted); text-decoration: line-through; }
 tr.inactive td:nth-child(n+2) { text-decoration: none; }
+tr.inactive td:first-child { text-decoration: none; }
 td.actions { white-space: nowrap; text-align: right; }
 td.actions button { margin-left: 6px; }
 
@@ -101,10 +102,6 @@ h3 { margin: 16px 0 8px; font-size: 16px; }
 .version-panel { margin-top: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
 .version-panel .scroll { margin-bottom: 4px; }
 .mt { margin-top: 8px; }
-.rate-editor { display: flex; flex-direction: column; gap: 8px; }
-.rate-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.rate-row select { min-width: 220px; }
-.rate-row input { min-width: 160px; flex: none; }
 .compare-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
 .compare-controls label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
 .change { font-size: 13px; }
@@ -112,3 +109,36 @@ h3 { margin: 16px 0 8px; font-size: 16px; }
 .change-removed { color: var(--danger); font-weight: 600; }
 .change-changed { color: #8a5a00; font-weight: 600; }
 .change-unchanged { color: var(--muted); }
+
+/* ---- US-04 rate grid and friendlier messages ---- */
+.banner { border-radius: 8px; padding: 10px 12px; font-size: 14px; margin: 8px 0; border: 1px solid transparent; }
+.banner-info { background: #eef3ff; border-color: #c9d4f8; color: #1f3a8a; }
+.banner-ok { background: #e2f4e8; border-color: #b7e0c4; color: #17653a; }
+.banner-muted { background: #f3f4f6; border-color: #dde1e7; color: #4b5565; }
+.empty { border: 1px dashed var(--border); border-radius: 8px; padding: 12px; margin: 8px 0; background: #fbfbfc; }
+.empty p { margin: 4px 0 0; }
+.rates-panel { display: flex; flex-direction: column; gap: 4px; padding: 4px 0; }
+.problem-list { margin: 6px 0 0; padding-left: 18px; }
+.problem-list li { margin: 2px 0; }
+
+table.rate-grid { min-width: 520px; }
+table.rate-grid caption { text-align: left; color: var(--muted); font-size: 13px; padding: 0 0 6px; caption-side: top; }
+table.rate-grid th[scope="col"] { text-align: right; }
+table.rate-grid th[scope="col"]:first-child { text-align: left; }
+table.rate-grid td { text-align: right; white-space: nowrap; }
+table.rate-grid tr.rate-group th { background: #f7f8fa; color: var(--text); font-size: 13px; font-weight: 600; padding-top: 10px; }
+table.rate-grid tr.inactive-role th { color: var(--muted); }
+table.rate-grid th[scope="row"] { font-weight: 500; color: var(--text); }
+.rate-value { font-variant-numeric: tabular-nums; font-weight: 500; }
+.not-allowed { color: var(--muted); font-style: italic; font-weight: 400; }
+.rate-cell { width: 140px; text-align: right; font-variant-numeric: tabular-nums; }
+.rate-cell[aria-invalid="true"], input[aria-invalid="true"] { border-color: var(--danger); background: #fff5f4; }
+.rate-cell:focus, input:focus, select:focus, button:focus-visible { outline: 2px solid #9db6f5; outline-offset: 1px; }
+
+@media (max-width: 640px) {
+  .page { padding: 16px 10px 40px; }
+  .contract-form input, .contract-form select { min-width: 0; width: 100%; }
+  .contract-form label { width: 100%; }
+  td.actions { white-space: normal; text-align: left; }
+  td.actions button { margin: 4px 6px 0 0; }
+}

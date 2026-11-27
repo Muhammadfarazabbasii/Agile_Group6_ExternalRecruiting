@@ -3,7 +3,7 @@
 Course rules (WS 2026/27): every AI use is disclosed, we can explain every line we hand in, no personal data or credentials in prompts, AI output is reviewed and tested.
 AI must not decide team matters (priorities, estimates, acceptance) and must not write our report reflection.
 
-Tool for entries 1 to 22: Claude Sonnet 5.5 (model id `claude-sonnet-5-5`), used through the Claude app. The header said this for every entry, but **entries 23 to 27 were made with Claude Haiku 5.5** (model id `claude-haiku-5-5`), also through the Claude app. The team must check which model was used for entries 1 to 22 and correct those rows after review. Entries 1 to 22 have not been changed.
+Tool for entries 1 to 22: Claude Sonnet 5.5 (model id `claude-sonnet-5-5`), used through the Claude app. The header said this for every entry, but **entries 23 to 29 were made with Claude Haiku 5.5** (model id `claude-haiku-5-5`), also through the Claude app. The team must check which model was used for entries 1 to 22 and correct those rows after review. Entries 1 to 22 have not been changed.
 
 How to read the columns:
 - **Result** is filled in by the team after review: Adopted, Adopted with changes, or Rejected. "Pending review" means nobody has decided yet.
@@ -41,16 +41,18 @@ How to read the columns:
 | 26 | 26.11.2026 | Frontend for US-03: version panel, rate editor, start negotiation and activate with confirmation, copy option, compare table | Same request as entry 24 | Pending review | Build passes. Headless Chrome check with 11 checks (create version, edit rates, duplicate role and level refused, activate, supersede, compare, read-only for Hiring Manager). Screenshots saved, not yet reviewed by the team. Some check-script selectors were wrong and were fixed; the app behaviour was confirmed from the server log and the database. Team must test by hand |
 | 27 | 26.11.2026 | Regenerate `openapi.json` (34 operations), update API.md and README for US-03 and the Group 7 agreements | Asked for the updated OpenAPI JSON, API file, README and AI usage log | Pending review | `openapi.json` validated with `openapi-spec-validator` (OpenAPI 3.1, 27 paths). Statements in README and API.md checked against code and tests by the assistant |
 | 28 | 26.11.2026 | Answer to Group 5 (People Analytics): change feed on the audit log (`after_id`), API docs for polling, regenerated `openapi.json` | Pasted Group 5's preferences (webhooks, snapshot, KPIs, team IDs, date filters) and asked what the project needs to change and what to send back | Pending review | 6 new tests; 130 tests pass in total (run by the assistant). `openapi.json` validated with `openapi-spec-validator`. Scope (feed only, no webhooks, no team IDs, no `updatedSince`) is a team decision that the assistant proposed, not decided. Team must check the answer before sending |
+| 29 | 27.11.2026 | US-04 maximum daily rate per version, role and level: rate table and CRUD, currency mandatory, lookup with "not allowed", rate grid screen, friendlier version and rate screens | Pasted the US-04 story (acceptance criteria and 7 steps) and asked to amend the project and make the front end more user-friendly | Pending review | Backend: 174 tests pass (run by the assistant), 44 of them for US-04, and mutation check: disabling the locking or the duplicate check makes tests fail. Frontend: `vite build` passes; headless Chrome check with 15 checks (grid, locking, validation, Enter to save, discard confirmation, activation, Hiring Manager read only), 0 JavaScript errors. Screenshots saved and one was reviewed by the assistant; the team must look at them and test by hand. Currency list (EUR only), 404 for "not allowed" and maximum rate instead of average are proposals for the team to decide |
+| 30 | 27.11.2026 | Fix: on a version with no roles only the travel cap could be edited, the rate grid showed nothing | Reported: "travel surcharge is editable but rates are not editable". Asked to find and fix the cause | Pending review | Reproduced in headless Chrome on a database with a category but no roles (no rate inputs, only the cap). Fixed with a notice and an "Edit travel cap" button. Checked: reproduction 4 of 4 checks, US-04 browser check 15 of 15 still pass, `vite build` passes. Backend unchanged. Team must test by hand |
 
 ## AI-assisted files in the repository
 
-Mark these in commits with the trailer `AI-Assisted: <model>, <purpose>`, as the course asks. Use the model that was actually used for that change: Claude Sonnet 5.5 for entries 1 to 22, Claude Haiku 5.5 for entries 23 to 27.
+Mark these in commits with the trailer `AI-Assisted: <model>, <purpose>`, as the course asks. Use the model that was actually used for that change: Claude Sonnet 5.5 for entries 1 to 22, Claude Haiku 5.5 for entries 23 to 29.
 
 | Files | Purpose |
 |---|---|
-| `backend/` (app, tests, requirements.txt) | US-01, US-02 incl. Group 7 take-over, and US-03 versions (entries 8, 9, 16, 19, 20, 23, 24, 25) |
-| `frontend/` (App.jsx, api.js, pages/, components/, styles.css) | US-01, US-02 and US-03 screens (entries 8, 17, 21, 26) |
-| `README.md`, `API.md`, `openapi.json` | Run instructions, API description, US-03 and Group 7 notes (entries 8, 10, 18, 22, 27) |
+| `backend/` (app, tests, requirements.txt) | US-01, US-02 incl. Group 7 take-over, US-03 versions, US-04 rates, audit change feed (entries 8, 9, 16, 19, 20, 23, 24, 25, 28, 29) |
+| `frontend/` (App.jsx, api.js, pages/, components/, styles.css) | US-01, US-02, US-03 and US-04 screens, including the rate grid (entries 8, 17, 21, 26, 29) |
+| `README.md`, `API.md`, `openapi.json` | Run instructions, API description, US-03, US-04 and Group 7 notes (entries 8, 10, 18, 22, 27, 28, 29) |
 | `openapi-draft-us06-us07.yaml` | Interface draft (entries 11, 22) |
 | `docs/group7/` | Files from Group 7 (not ours, only `openapi.json` is a conversion of their yaml, entry 20) |
 | `Group6_User_Stories_Board.md` | Stories, acceptance criteria, checklists (entries 1, 2, 7) |

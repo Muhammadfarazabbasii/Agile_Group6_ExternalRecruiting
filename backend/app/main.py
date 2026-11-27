@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import Base, engine
-from .routers import catalogue, group7, suppliers, versions
+from .routers import catalogue, group7, rates, suppliers, versions
 from .seed import seed
 
 
@@ -21,7 +21,7 @@ app = FastAPI(
     version="0.1.0",
     description=(
         "Sprint 1: role catalogue (US-01), suppliers and framework contracts incl. take-over from Group 7 (US-02), "
-        "contract versions with rates and comparison (US-03)."
+        "contract versions with rates and comparison (US-03), maximum daily rates per role and level (US-04)."
     ),
     lifespan=lifespan,
 )
@@ -37,6 +37,7 @@ app.include_router(catalogue.router)
 app.include_router(suppliers.router)
 app.include_router(group7.router)
 app.include_router(versions.router)
+app.include_router(rates.router)
 
 
 @app.get("/health", tags=["Operations"])
